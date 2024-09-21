@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dishwasher Timer Optimizer</title>
+    <style>
+        :root {
+            --dark-grey: #333333;
+            --light-blue: #e6f2ff;
+            --light-violet: #f2e6ff;
+        }
+
+        body {
+            font-family: 'DM Sans', Arial, sans-serif;
+            color: var(--dark-grey);
+            text-align: center;
+            margin: 0;
+            padding: 5px;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        #program-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .program-button {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 22%;
+            padding: 5px 2px;
+            font-size: 14px;
+            border: 1px solid #007BFF;
+            border-radius: 6px;
+            background-color: white;
+            color: #007BFF;
+            text-align: center;
+            transition: background-color 250ms, color 250ms;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .program-button:active {
+            background-color: inherit;
+            color: inherit;
+        }
+
+        .program-button.selected {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .program-button.pressed {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .program-description {
+            font-size: 12px;
+            line-height: 1;
+        }
+
+        .program-name {
+            font-weight: bold;
+            font-size: 20px;
+            line-height: 1;
+            margin-top: 2px;
+        }
+
+        .time-input-container {
+            margin: 30px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .time-input {
+            font-size: 36px;
+            width: 40px;
+            text-align: center;
+            margin: 0 2px;
+            border: none;
+            border-bottom: 2px solid #ccc;
+            padding: 0;
+        }
+
+        .time-input.highlight {
+            border-bottom-color: #007BFF;
+            background-color: #e6f2ff;
+            box-shadow: 0 0 5px #007BFF;
+        }
+
+        .preset-buttons {
+            margin: 30px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .preset-button {
+            width: auto;
+            min-width: 70px;
+            margin: 3px;
+            padding: 8px 12px;
+            font-size: 18px;
+            border: 1px solid #28A745;
+            border-radius: 6px;
+            background-color: white;
+            color: #28A745;
+            transition: background-color 250ms, color 250ms;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .preset-button:active {
+            background-color: inherit;
+            color: inherit;
+        }
+
+        .preset-button.pressed {
+            background-color: #28A745;
+            color: white;
+        }
+
+        .keypad-container {
+            padding: 10px 0;
+            margin: 0 -5px;
+            /* Negative margin to counteract body padding */
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 0 10px;
+            /* Add horizontal margin inside the container */
+        }
+
+        .keypad-button {
+            width: 100%;
+            padding: 10px 0;
+            font-size: 24px;
+            font-family: 'DM Sans', sans-serif;
+            border: none;
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            /* Light grey background */
+            color: #6C757D;
+            transition: background-color 250ms, color 250ms;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .keypad-button:active {
+            background-color: #e0e0e0;
+            /* Slightly darker when pressed */
+            color: #6C757D;
+        }
+
+        .keypad-button.pressed {
+            background-color: #d0d0d0;
+            /* Even darker when held */
+            color: #6C757D;
+        }
+
+        /* Style for the last row */
+        .keypad-button:last-child {
+            grid-column: 2;
+        }
+
+        .result-container {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 1.5em;
+        }
+
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        input {
+            -webkit-user-select: text;
+            -khtml-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        .time-adjust-button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f0f0f0;
+            border: none;
+            color: #6C757D;
+            cursor: pointer;
+            border-radius: 50px;
+            margin: 0 20px;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            opacity: 0.3;
+        }
+
+        .time-adjust-button:active {
+            color: #0056b3;
+        }
+
+        .time-input-container:nth-child(2) .time-input {
+            background-color: #f0f0f0;
+            border-bottom-color: #999;
+        }
+
+        .finish-time-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            height: 60px;
+        }
+
+        .finish-time-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 20px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            height: 100%;
+        }
+
+        .finish-time-wrapper .time-input {
+            font-size: 36px;
+            width: 30px;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            border: none;
+            background-color: transparent;
+        }
+
+        .finish-time-wrapper .time-separator {
+            font-size: 36px;
+            margin: 0 2px;
+        }
+
+        .time-diff-wrapper {
+            width: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            /* Make it full height of the container */
+        }
+
+        .time-diff {
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-weight: 500;
+            padding: 5px 5px;
+            border-radius: 7px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            letter-spacing: 1.5px;
+            margin: 0 5px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            height: 100%;
+            /* Make it full height */
+            box-sizing: border-box;
+            /* Include padding in the height */
+
+        }
+
+        .time-diff-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .time-diff-label {
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .time-diff.earlier,
+        .time-diff.later {
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .timer-setting-container {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+
+        #timerSetting {
+            background-color: rgb(241, 228, 85);
+            border-radius: 10px;
+            padding: 0 10px;
+        }
+
+        .time-diff {
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=DM+Sans:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <div class="content">
+        <div id="program-buttons">
+            <button class="program-button selected" id="p1" data-duration="220" data-description="ECO">
+                <span class="program-description">ECO</span>
+                <span class="program-name">1</span>
+            </button>
+            <button class="program-button" id="p3" data-duration="170" data-description="Hygiene">
+                <span class="program-description">Hygiene</span>
+                <span class="program-name">3</span>
+            </button>
+            <button class="program-button" id="p4" data-duration="90" data-description="Schnell">
+                <span class="program-description">Schnell 1:30</span>
+                <span class="program-name">4</span>
+            </button>
+            <button class="program-button" id="p6" data-duration="30" data-description="Micro">
+                <span class="program-description">Superkurz</span>
+                <span class="program-name">6</span>
+            </button>
+        </div>
+
+        <div class="time-input-container">
+            <button class="time-adjust-button" id="subtractTime"><i class="fas fa-arrow-left"></i></button>
+            <input type="text" class="time-input highlight" id="digit1" maxlength="1" readonly>
+            <input type="text" class="time-input" id="digit2" maxlength="1" readonly>
+            <span style="font-size: 36px;">:</span>
+            <input type="text" class="time-input" id="digit3" maxlength="1" readonly>
+            <input type="text" class="time-input" id="digit4" maxlength="1" readonly>
+            <button class="time-adjust-button" id="addTime"><i class="fas fa-arrow-right"></i></button>
+        </div>
+
+        <div class="finish-time-container">
+            <div class="time-diff-wrapper">
+                <span class="time-diff earlier" id="earlierDiff">
+                    <span class="time-diff-value">00:00</span><br>
+                    <span class="time-diff-label">früher</span>
+                </span>
+            </div>
+            <div class="finish-time-wrapper">
+                <input type="text" class="time-input" id="finishHour1" maxlength="1" readonly>
+                <input type="text" class="time-input" id="finishHour2" maxlength="1" readonly>
+                <span class="time-separator">:</span>
+                <input type="text" class="time-input" id="finishMin1" maxlength="1" readonly>
+                <input type="text" class="time-input" id="finishMin2" maxlength="1" readonly>
+            </div>
+            <div class="time-diff-wrapper">
+                <span class="time-diff later" id="laterDiff">
+                    <span class="time-diff-value">00:00</span><br>
+                    <span class="time-diff-label">später</span>
+                </span>
+            </div>
+        </div>
+
+        <div class="timer-setting-container">
+            <span>Timer auf <span id="timerSetting"></span> oder <a href="#" id="magicLink">BestSelect</a></span>
+        </div>
+
+        <div class="preset-buttons">
+            <button class="preset-button" id="preset1">06:30</button>
+            <button class="preset-button" id="preset2">08:15</button>
+            <button class="preset-button" id="preset4">18:45</button>
+            <button class="preset-button" id="preset5">22:00</button>
+        </div>
+
+        <div class="keypad-container">
+            <div class="keypad">
+                <button class="keypad-button">1</button>
+                <button class="keypad-button">2</button>
+                <button class="keypad-button">3</button>
+                <button class="keypad-button">4</button>
+                <button class="keypad-button">5</button>
+                <button class="keypad-button">6</button>
+                <button class="keypad-button">7</button>
+                <button class="keypad-button">8</button>
+                <button class="keypad-button">9</button>
+                <button class="keypad-button">0</button>
+            </div>
+        </div>
+
+        <script>
+            const programInfo = {
+                'p1': { duration: 220, description: 'ECO' },
+                'p3': { duration: 170, description: 'Hygiene' },
+                'p4': { duration: 90, description: 'Schnell' },
+                'p6': { duration: 30, description: 'Micro' }
+            }
+
+            let selectedProgram = 'p1';
+
+            const programButtons = document.querySelectorAll('.program-button');
+            programButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    programButtons.forEach(btn => btn.classList.remove('selected'));
+                    button.classList.add('selected');
+                    selectedProgram = button.id;
+                    calculateTimerSetting();
+                });
+            });
+
+            const digits = ['digit1', 'digit2', 'digit3', 'digit4'];
+            let currentDigitIndex = 0;
+
+            function highlightCurrentDigit() {
+                digits.forEach((id, index) => {
+                    const field = document.getElementById(id);
+                    if (index === currentDigitIndex) {
+                        field.classList.add('highlight');
+                    } else {
+                        field.classList.remove('highlight');
+                    }
+                });
+            }
+
+            highlightCurrentDigit();
+
+            const keypadButtons = document.querySelectorAll('.keypad-button');
+            keypadButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const digit = button.textContent;
+                    if (isValidInput(digit)) {
+                        const currentField = document.getElementById(digits[currentDigitIndex]);
+                        currentField.value = digit;
+                        currentDigitIndex = (currentDigitIndex + 1) % 4;
+                        highlightCurrentDigit();
+                        calculateTimerSetting();
+                    }
+                });
+            });
+
+            function isValidInput(digit) {
+                const hour1 = document.getElementById('digit1').value;
+                const hour2 = document.getElementById('digit2').value;
+                const min1 = document.getElementById('digit3').value;
+                const min2 = document.getElementById('digit4').value;
+
+                switch (currentDigitIndex) {
+                    case 0:
+                        return digit <= '2';
+                    case 1:
+                        return hour1 === '2' ? digit <= '3' : true;
+                    case 2:
+                        return digit <= '5';
+                    case 3:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            const presetButtons = document.querySelectorAll('.preset-button');
+            presetButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const timeStr = button.textContent.replace(':', '');
+                    if (isValidTime(timeStr)) {
+                        setTimePreset(timeStr);
+                    }
+                });
+            });
+
+            function isValidTime(timeStr) {
+                const hours = parseInt(timeStr.substring(0, 2));
+                const minutes = parseInt(timeStr.substring(2, 4));
+                return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+            }
+
+            function setTimePreset(timeStr) {
+                document.getElementById('digit1').value = timeStr.charAt(0);
+                document.getElementById('digit2').value = timeStr.charAt(1);
+                document.getElementById('digit3').value = timeStr.charAt(2);
+                document.getElementById('digit4').value = timeStr.charAt(3);
+                currentDigitIndex = 0;
+                highlightCurrentDigit();
+                calculateTimerSetting();
+            }
+
+            window.onload = function () {
+                highlightCurrentDigit();
+                calculateTimerSetting();
+            };
+
+            function calculateTimerSetting() {
+                let hours = parseInt(document.getElementById('digit1').value + document.getElementById('digit2').value);
+                let minutes = parseInt(document.getElementById('digit3').value + document.getElementById('digit4').value);
+                if (isNaN(hours)) hours = 0;
+                if (isNaN(minutes)) minutes = 0;
+
+                const now = new Date();
+                const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+
+                let finishTimeMinutes = hours * 60 + minutes;
+
+                if (finishTimeMinutes <= currentTimeMinutes) {
+                    finishTimeMinutes += 24 * 60;
+                }
+
+                let timeDiff = finishTimeMinutes - currentTimeMinutes;
+                if (timeDiff < 0) {
+                    timeDiff += 24 * 60;
+                }
+
+                const programDuration = programInfo[selectedProgram].duration;
+                let delayTime = timeDiff - programDuration;
+
+                const timerSettings = [
+                    30, 60, 90, 120, 150, 180, 210, 240,
+                    300, 360, 420, 480, 540, 600, 660, 720,
+                    960, 1200, 1440
+                ];
+
+                let closestTimerSetting = timerSettings.reduce((prev, curr) => {
+                    return (Math.abs(curr - delayTime) < Math.abs(prev - delayTime) ? curr : prev);
+                });
+
+                let actualFinishMinutes = currentTimeMinutes + closestTimerSetting + programDuration;
+                const daysLater = Math.floor(actualFinishMinutes / (24 * 60));
+                actualFinishMinutes %= (24 * 60);
+
+                let timeDiffMinutes = actualFinishMinutes - finishTimeMinutes;
+                if (daysLater > 0) {
+                    timeDiffMinutes += daysLater * 24 * 60;
+                }
+                if (timeDiffMinutes <= -12 * 60) {
+                    timeDiffMinutes += 24 * 60;
+                } else if (timeDiffMinutes > 12 * 60) {
+                    timeDiffMinutes -= 24 * 60;
+                }
+                const earlierLater = timeDiffMinutes <= 0 ? "früher" : "später";
+                const absDiffMinutes = Math.abs(timeDiffMinutes);
+                const diffHours = Math.floor(absDiffMinutes / 60);
+                const diffMins = absDiffMinutes % 60;
+
+                let timeDiffStr = '';
+                if (diffHours > 0) {
+                    timeDiffStr += `${diffHours}"`;
+                }
+                if (diffMins > 0 || diffHours === 0) {
+                    timeDiffStr += `${diffMins}'`;
+                }
+
+                let buttonPresses = timerSettings.indexOf(closestTimerSetting) + 1;
+
+                let timerSettingStr;
+                if (closestTimerSetting < 240) {
+                    timerSettingStr = (closestTimerSetting / 60).toFixed(1).replace('.5', ':30').replace('.0', '') + ' h';
+                } else {
+                    timerSettingStr = (closestTimerSetting / 60) + ' h';
+                }
+
+                const actualFinishTimeStr = ('0' + Math.floor(actualFinishMinutes / 60)).slice(-2) + ':' + ('0' + (actualFinishMinutes % 60)).slice(-2);
+
+                document.getElementById('finishHour1').value = actualFinishTimeStr[0];
+                document.getElementById('finishHour2').value = actualFinishTimeStr[1];
+                document.getElementById('finishMin1').value = actualFinishTimeStr[3];
+                document.getElementById('finishMin2').value = actualFinishTimeStr[4];
+
+                const finishTimeWrapper = document.querySelector('.finish-time-wrapper');
+                const earlierDiff = document.getElementById('earlierDiff');
+                const laterDiff = document.getElementById('laterDiff');
+
+                if (earlierLater === "früher") {
+                    earlierDiff.querySelector('.time-diff-value').textContent = timeDiffStr;
+                    earlierDiff.style.display = 'inline-block';
+                    laterDiff.style.display = 'none';
+                    finishTimeWrapper.classList.add('earlier');
+                    finishTimeWrapper.classList.remove('later');
+                } else {
+                    laterDiff.querySelector('.time-diff-value').textContent = timeDiffStr;
+                    laterDiff.style.display = 'inline-block';
+                    earlierDiff.style.display = 'none';
+                    finishTimeWrapper.classList.add('later');
+                    finishTimeWrapper.classList.remove('earlier');
+                }
+
+                document.getElementById('timerSetting').textContent = `${timerSettingStr} (${buttonPresses}×)`;
+
+                // Add click event listener to the magic link
+                document.getElementById('magicLink').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const finishTimeMinutes = parseInt(document.getElementById('digit1').value + document.getElementById('digit2').value) * 60 +
+                        parseInt(document.getElementById('digit3').value + document.getElementById('digit4').value);
+                    selectOptimalProgram(finishTimeMinutes);
+                });
+            }
+
+            function selectOptimalProgram(desiredFinishTime) {
+                const now = new Date();
+                const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+
+                let bestProgram = null;
+                let smallestDiff = Infinity;
+
+                const timerSettings = [
+                    30, 60, 90, 120, 150, 180, 210, 240,
+                    300, 360, 420, 480, 540, 600, 660, 720,
+                    960, 1200, 1440
+                ];
+
+                for (const [programId, info] of Object.entries(programInfo)) {
+                    if (info.duration >= 60) {
+                        let programDuration = info.duration;
+                        let timeDiff = desiredFinishTime - currentTimeMinutes;
+
+                        // Adjust for crossing midnight
+                        if (timeDiff <= 0) {
+                            timeDiff += 24 * 60;
+                        }
+
+                        let delayTime = timeDiff - programDuration;
+
+                        // Find the closest available timer setting
+                        let closestTimerSetting = timerSettings.reduce((prev, curr) => {
+                            return (Math.abs(curr - delayTime) < Math.abs(prev - delayTime) ? curr : prev);
+                        });
+
+                        let actualFinishTime = (currentTimeMinutes + closestTimerSetting + programDuration) % (24 * 60);
+                        let actualTimeDiff = (actualFinishTime - desiredFinishTime + 24 * 60) % (24 * 60);
+
+                        // Adjust so that actualTimeDiff is always the shortest path
+                        if (actualTimeDiff > 12 * 60) {
+                            actualTimeDiff = actualTimeDiff - 24 * 60;
+                        }
+
+                        // Only consider programs that finish earlier
+                        if (actualTimeDiff < 0 && Math.abs(actualTimeDiff) < Math.abs(smallestDiff)) {
+                            smallestDiff = actualTimeDiff;
+                            bestProgram = programId;
+                        }
+                    }
+                }
+
+                if (bestProgram) {
+                    document.querySelectorAll('.program-button').forEach(btn => {
+                        btn.classList.remove('selected');
+                        if (btn.id === bestProgram) {
+                            btn.classList.add('selected');
+                        }
+                    });
+                    selectedProgram = bestProgram;
+                    calculateTimerSetting();
+                }
+            }
+
+            function addPressEffect(button) {
+                const pressHandler = (e) => {
+                    e.preventDefault();
+                    button.classList.add('pressed');
+
+                    if (button.classList.contains('keypad-button')) {
+                        const digit = button.textContent;
+                        if (isValidInput(digit)) {
+                            const currentField = document.getElementById(digits[currentDigitIndex]);
+                            currentField.value = digit;
+                            currentDigitIndex = (currentDigitIndex + 1) % 4;
+                            highlightCurrentDigit();
+                            calculateTimerSetting();
+                        }
+                    } else if (button.classList.contains('program-button')) {
+                        programButtons.forEach(btn => btn.classList.remove('selected'));
+                        button.classList.add('selected');
+                        selectedProgram = button.id;
+                        calculateTimerSetting();
+                    } else if (button.classList.contains('preset-button')) {
+                        const timeStr = button.textContent.replace(':', '');
+                        if (isValidTime(timeStr)) {
+                            setTimePreset(timeStr);
+                        }
+                    } else if (button.id === 'subtractTime') {
+                        adjustTime(-10);
+                    } else if (button.id === 'addTime') {
+                        adjustTime(10);
+                    }
+                };
+
+                const releaseHandler = (e) => {
+                    e.preventDefault();
+                    setTimeout(() => {
+                        button.classList.remove('pressed');
+                    }, 250);
+                };
+
+                button.addEventListener('touchstart', pressHandler);
+                button.addEventListener('touchend', releaseHandler);
+                button.addEventListener('mousedown', pressHandler);
+                button.addEventListener('mouseup', releaseHandler);
+            }
+
+            document.querySelectorAll('.program-button, .preset-button, .keypad-button, .time-adjust-button').forEach(addPressEffect);
+
+            document.getElementById('subtractTime').addEventListener('click', () => adjustTime(-10));
+            document.getElementById('addTime').addEventListener('click', () => adjustTime(10));
+
+            function adjustTime(minutes) {
+                let hours = parseInt(document.getElementById('digit1').value + document.getElementById('digit2').value) || 0;
+                let mins = parseInt(document.getElementById('digit3').value + document.getElementById('digit4').value) || 0;
+
+                let totalMinutes = hours * 60 + mins + minutes;
+                if (totalMinutes < 0) totalMinutes += 24 * 60;
+                totalMinutes %= 24 * 60;
+
+                hours = Math.floor(totalMinutes / 60);
+                mins = totalMinutes % 60;
+
+                document.getElementById('digit1').value = Math.floor(hours / 10);
+                document.getElementById('digit2').value = hours % 10;
+                document.getElementById('digit3').value = Math.floor(mins / 10);
+                document.getElementById('digit4').value = mins % 10;
+
+                calculateTimerSetting();
+            }
+        </script>
+</body>
+
+</html>
