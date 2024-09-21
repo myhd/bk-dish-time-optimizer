@@ -405,6 +405,16 @@
             const digits = ['digit1', 'digit2', 'digit3', 'digit4'];
             let currentDigitIndex = 0;
 
+            let inactivityTimer;
+
+            function resetInactivityTimer() {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(() => {
+                    currentDigitIndex = 0;
+                    highlightCurrentDigit();
+                }, 3000); // 5 seconds
+            }
+
             function highlightCurrentDigit() {
                 digits.forEach((id, index) => {
                     const field = document.getElementById(id);
@@ -414,6 +424,7 @@
                         field.classList.remove('highlight');
                     }
                 });
+                resetInactivityTimer(); // Reset the timer whenever we highlight a digit
             }
 
             highlightCurrentDigit();
@@ -428,6 +439,7 @@
                         currentDigitIndex = (currentDigitIndex + 1) % 4;
                         highlightCurrentDigit();
                         calculateTimerSetting();
+                        resetInactivityTimer(); // Reset the timer on input
                     }
                 });
             });
@@ -476,6 +488,7 @@
                 currentDigitIndex = 0;
                 highlightCurrentDigit();
                 calculateTimerSetting();
+                resetInactivityTimer(); // Reset the timer when setting a preset
             }
 
             window.onload = function () {
@@ -486,6 +499,7 @@
                     firstPresetButton.click();
                 }
                 calculateTimerSetting();
+                resetInactivityTimer(); // Initialize the inactivity timer
             };
 
             function calculateTimerSetting() {
@@ -704,6 +718,7 @@
                 document.getElementById('digit4').value = mins % 10;
 
                 calculateTimerSetting();
+                resetInactivityTimer(); // Reset the timer when adjusting time
             }
         </script>
 </body>
