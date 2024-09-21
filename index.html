@@ -244,20 +244,16 @@
 
         .finish-time-container {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            margin: 30px 0;
-            height: 60px;
+            margin-bottom: 0;
         }
 
         .finish-time-wrapper {
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0 20px;
-            padding: 5px 10px;
-            border-radius: 6px;
-            height: 100%;
+            padding: 0;
         }
 
         .finish-time-wrapper #finishTime {
@@ -266,50 +262,15 @@
             background-color: transparent;
             color: inherit;
             letter-spacing: 2px;
+            line-height: 0.9;
         }
 
-        .time-diff-wrapper {
-            width: 70px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100%;
-            /* Make it full height of the container */
-        }
-
-        .time-diff {
-            font-family: 'IBM Plex Sans', sans-serif;
-            font-weight: 500;
-            padding: 5px 5px;
-            border-radius: 7px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            letter-spacing: 1.5px;
-            margin: 0 5px;
-            text-align: center;
-            color: white;
-            cursor: pointer;
-            height: 100%;
-            /* Make it full height */
-            box-sizing: border-box;
-            /* Include padding in the height */
-
-        }
-
-        .time-diff-value {
+        .time-diff-text {
             font-size: 18px;
-            font-weight: 700;
-        }
-
-        .time-diff-label {
-            font-size: 14px;
-            font-weight: 400;
-        }
-
-        .time-diff.earlier,
-        .time-diff.later {
-            background-color: rgba(0, 0, 0, 0.9);
+            margin-top: 0;
+            text-align: center;
+            font-family: 'DM Sans', sans-serif;
+            line-height: 1;
         }
 
         .timer-setting-container {
@@ -326,6 +287,13 @@
         .time-diff {
             color: white;
             cursor: pointer;
+        }
+
+        .time-diff-text {
+            font-size: 18px;
+            margin-top: 10px;
+            text-align: center;
+            font-family: 'DM Sans', sans-serif;
         }
     </style>
 
@@ -368,25 +336,14 @@
         </div>
 
         <div class="finish-time-container">
-            <div class="time-diff-wrapper">
-                <span class="time-diff earlier" id="earlierDiff">
-                    <span class="time-diff-value">00:00</span><br>
-                    <span class="time-diff-label">früher</span>
-                </span>
-            </div>
             <div class="finish-time-wrapper">
                 <span id="finishTime">20:28</span>
             </div>
-            <div class="time-diff-wrapper">
-                <span class="time-diff later" id="laterDiff">
-                    <span class="time-diff-value">00:00</span><br>
-                    <span class="time-diff-label">später</span>
-                </span>
-            </div>
+            <div id="timeDiffText" class="time-diff-text"></div>
         </div>
 
         <div class="timer-setting-container">
-            <span>Timer auf <span id="timerSetting"></span> oder <a href="#" id="magicLink">BestSelect</a></span>
+            <span>Stelle Timer <span id="timerSetting"></span> oder <a href="#" id="magicLink">BestSelect</a></span>
         </div>
 
         <div class="preset-buttons">
@@ -589,23 +546,8 @@
 
                 document.getElementById('finishTime').textContent = actualFinishTimeStr;
 
-                const finishTimeWrapper = document.querySelector('.finish-time-wrapper');
-                const earlierDiff = document.getElementById('earlierDiff');
-                const laterDiff = document.getElementById('laterDiff');
-
-                if (earlierLater === "früher") {
-                    earlierDiff.querySelector('.time-diff-value').textContent = timeDiffStr;
-                    earlierDiff.style.display = 'inline-block';
-                    laterDiff.style.display = 'none';
-                    finishTimeWrapper.classList.add('earlier');
-                    finishTimeWrapper.classList.remove('later');
-                } else {
-                    laterDiff.querySelector('.time-diff-value').textContent = timeDiffStr;
-                    laterDiff.style.display = 'inline-block';
-                    earlierDiff.style.display = 'none';
-                    finishTimeWrapper.classList.add('later');
-                    finishTimeWrapper.classList.remove('earlier');
-                }
+                const timeDiffText = document.getElementById('timeDiffText');
+                timeDiffText.textContent = `${timeDiffStr} ${earlierLater} beendet`;
 
                 document.getElementById('timerSetting').textContent = `${timerSettingStr} (${buttonPresses}×)`;
 
