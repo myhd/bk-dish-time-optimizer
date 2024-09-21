@@ -295,6 +295,20 @@
             text-align: center;
             font-family: 'DM Sans', sans-serif;
         }
+
+        @keyframes flashRed {
+            0% {
+                background-color: #ff00003f;
+            }
+
+            100% {
+                background-color: transparent;
+            }
+        }
+
+        .flash-red {
+            animation: flashRed 0.9s ease;
+        }
     </style>
 
     <link
@@ -615,6 +629,12 @@
                     });
                     selectedProgram = bestProgram;
                     calculateTimerSetting();
+                } else {
+                    // Flash the background red if no earlier program is found
+                    document.body.classList.add('flash-red');
+                    setTimeout(() => {
+                        document.body.classList.remove('flash-red');
+                    }, 500);
                 }
             }
 
