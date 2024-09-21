@@ -260,19 +260,12 @@
             height: 100%;
         }
 
-        .finish-time-wrapper .time-input {
+        .finish-time-wrapper #finishTime {
             font-size: 45px;
-            width: 30px;
             text-align: center;
-            margin: 0;
-            padding: 0;
-            border: none;
             background-color: transparent;
-        }
-
-        .finish-time-wrapper .time-separator {
-            font-size: 36px;
-            margin: 0 2px;
+            color: inherit;
+            letter-spacing: 2px;
         }
 
         .time-diff-wrapper {
@@ -382,11 +375,7 @@
                 </span>
             </div>
             <div class="finish-time-wrapper">
-                <input type="text" class="time-input" id="finishHour1" maxlength="1" readonly>
-                <input type="text" class="time-input" id="finishHour2" maxlength="1" readonly>
-                <span class="time-separator">:</span>
-                <input type="text" class="time-input" id="finishMin1" maxlength="1" readonly>
-                <input type="text" class="time-input" id="finishMin2" maxlength="1" readonly>
+                <span id="finishTime">20:28</span>
             </div>
             <div class="time-diff-wrapper">
                 <span class="time-diff later" id="laterDiff">
@@ -598,10 +587,7 @@
 
                 const actualFinishTimeStr = ('0' + Math.floor(actualFinishMinutes / 60)).slice(-2) + ':' + ('0' + (actualFinishMinutes % 60)).slice(-2);
 
-                document.getElementById('finishHour1').value = actualFinishTimeStr[0];
-                document.getElementById('finishHour2').value = actualFinishTimeStr[1];
-                document.getElementById('finishMin1').value = actualFinishTimeStr[3];
-                document.getElementById('finishMin2').value = actualFinishTimeStr[4];
+                document.getElementById('finishTime').textContent = actualFinishTimeStr;
 
                 const finishTimeWrapper = document.querySelector('.finish-time-wrapper');
                 const earlierDiff = document.getElementById('earlierDiff');
