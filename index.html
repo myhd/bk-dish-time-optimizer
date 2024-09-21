@@ -520,6 +520,11 @@
 
             window.onload = function () {
                 highlightCurrentDigit();
+                // Select the first preset button and trigger its click event
+                const firstPresetButton = document.querySelector('.preset-button');
+                if (firstPresetButton) {
+                    firstPresetButton.click();
+                }
                 calculateTimerSetting();
             };
 
