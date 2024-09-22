@@ -1,7 +1,7 @@
 {
     "name": "Dishwasher Timer Optimizer",
     "short_name": "DishTimer",
-    "start_url": "/index.html",
+    "start_url": "index.html",
     "display": "standalone",
     "theme_color": "#ffffff",
     "background_color": "#ffffff"
