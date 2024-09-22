@@ -17,13 +17,16 @@
             --dark-grey: #333333;
             --light-blue: #e6f2ff;
             --light-violet: #f2e6ff;
+            --button-spacing: 8px;
+            --default-font-size: 18px;
+            /* Adjust this value to change spacing */
         }
 
         body {
             color: var(--dark-grey);
             text-align: center;
             margin: 0;
-            padding: 5px 5px 80px;
+            padding: 0px 0px 80px;
             font-size: 14px;
             display: flex;
             flex-direction: column;
@@ -42,16 +45,17 @@
         #program-buttons {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
+            margin: var(--button-spacing);
+            gap: var(--button-spacing);
         }
 
         .program-button {
+            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            width: 22%;
-            padding: 5px 2px;
+            padding: 10px 2px;
             font-size: 14px;
             border: 1px solid #007BFF;
             border-radius: 6px;
@@ -79,13 +83,14 @@
         }
 
         .program-description {
-            font-size: 12px;
-            line-height: 1;
+            font-size: calc(var(--default-font-size) * 0.70);
+            line-height: 1.8;
         }
 
         .program-name {
-            font-weight: bold;
-            font-size: 20px;
+            /* font-weight: bold; */
+            /* font-size: 24px; */
+            font-size: var(--default-font-size);
             line-height: 1;
             margin-top: 2px;
         }
@@ -126,7 +131,7 @@
             min-width: 70px;
             margin: 3px;
             padding: 8px 12px;
-            font-size: 18px;
+            font-size: var(--default-font-size);
             border: 1px solid #007BFF;
             border-radius: 6px;
             background-color: white;
@@ -171,8 +176,8 @@
             border: none;
             border-radius: 8px;
             background-color: #f0f0f0;
-            color: #6C757D;
-            transition: background-color 250ms, color 250ms;
+            color: var(--dark-grey);
+            /* transition: background-color 100ms, color 100ms; */
             -webkit-tap-highlight-color: transparent;
             user-select: none;
         }
@@ -270,7 +275,8 @@
         }
 
         .time-diff-text {
-            font-size: 18px;
+            /* font-size: //18px; */
+            font-size: var(--default-font-size);
             margin-top: 0px;
             text-align: center;
             font-family: 'DM Sans', sans-serif;
@@ -284,17 +290,18 @@
             align-items: center;
             margin-right: 5px;
             font-size: 2em;
+            /* font-size: var(--default-font-size) * 2; */
         }
 
         .timer-setting-container {
-            font-size: 18px;
+            font-size: var(--default-font-size);
             margin: 20px 0;
         }
 
         #timerSetting {
-            background-color: rgb(241, 228, 85);
+            background-color: rgb(250, 232, 31);
             border-radius: 10px;
-            padding: 0 10px;
+            padding: 5px 10px;
         }
 
         .time-diff {
@@ -314,6 +321,11 @@
 
         .flash-red {
             animation: flashRed 0.5s ease;
+        }
+
+        #magicLink {
+            color: var(--dark-grey);
+            text-decoration: underline;
         }
     </style>
     <link rel="manifest" href="manifest.json">
@@ -422,7 +434,7 @@
             inactivityTimer = setTimeout(() => {
                 currentDigitIndex = 0;
                 highlightCurrentDigit();
-            }, 2000);
+            }, 1500);
         }
 
         function highlightCurrentDigit() {
@@ -705,9 +717,7 @@
 
             const releaseHandler = (e) => {
                 e.preventDefault();
-                setTimeout(() => {
-                    button.classList.remove('pressed');
-                }, 250);
+                button.classList.remove('pressed');
             };
 
             button.addEventListener('touchstart', pressHandler);
@@ -742,5 +752,7 @@
         }
     </script>
 </body>
+
+</html>
 
 </html>
