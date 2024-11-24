@@ -451,20 +451,20 @@
 
         highlightCurrentDigit();
 
-        const keypadButtons = document.querySelectorAll('.keypad-button');
-        keypadButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const digit = button.textContent;
-                if (isValidInput(digit)) {
-                    const currentField = document.getElementById(digits[currentDigitIndex]);
-                    currentField.value = digit;
-                    currentDigitIndex = (currentDigitIndex + 1) % 4;
-                    highlightCurrentDigit();
-                    calculateTimerSetting();
-                    resetInactivityTimer();
-                }
-            });
-        });
+        // const keypadButtons = document.querySelectorAll('.keypad-button');
+        // keypadButtons.forEach(button => {
+        //     button.addEventListener('click', () => {
+        //         const digit = button.textContent;
+        //         if (isValidInput(digit)) {
+        //             const currentField = document.getElementById(digits[currentDigitIndex]);
+        //             currentField.value = digit;
+        //             currentDigitIndex = (currentDigitIndex + 1) % 4;
+        //             highlightCurrentDigit();
+        //             calculateTimerSetting();
+        //             resetInactivityTimer();
+        //         }
+        //     });
+        // });
 
         function isValidInput(digit) {
             const hour1 = document.getElementById('digit1').value;
@@ -697,6 +697,7 @@
                         currentDigitIndex = (currentDigitIndex + 1) % 4;
                         highlightCurrentDigit();
                         calculateTimerSetting();
+                        resetInactivityTimer(); // Ensure the inactivity timer is reset
                     }
                 } else if (button.classList.contains('program-button')) {
                     programButtons.forEach(btn => btn.classList.remove('selected'));
