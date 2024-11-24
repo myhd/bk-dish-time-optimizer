@@ -599,7 +599,7 @@
             const emoji = getEmoji(timeDiffMinutes);
             timeDiffText.innerHTML = `<span class="emoji">${emoji}</span> ${timeDiffStr} ${earlierLater} beendet`;
 
-            document.getElementById('timerSetting').textContent = `${timerSettingStr} (${buttonPresses}×)`;
+            document.getElementById('timerSetting').textContent = `${timerSettingStr} (Knopf ${buttonPresses}× drücken)`;
 
             document.getElementById('magicLink').addEventListener('click', (e) => {
                 e.preventDefault();
