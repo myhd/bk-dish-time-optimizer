@@ -345,18 +345,22 @@
             <button class="program-button selected" id="p1" data-duration="220" data-description="ECO">
                 <span class="program-description">ECO</span>
                 <span class="program-name">1</span>
+                <span class="program-description end-time"></span>
             </button>
             <button class="program-button" id="p3" data-duration="170" data-description="Hygiene">
                 <span class="program-description">Hygiene</span>
                 <span class="program-name">3</span>
+                <span class="program-description end-time"></span>
             </button>
             <button class="program-button" id="p4" data-duration="90" data-description="Schnell">
                 <span class="program-description">Schnell 1:30</span>
                 <span class="program-name">4</span>
+                <span class="program-description end-time"></span>
             </button>
             <button class="program-button" id="p6" data-duration="30" data-description="Micro">
                 <span class="program-description">Superkurz</span>
                 <span class="program-name">6</span>
+                <span class="program-description end-time"></span>
             </button>
         </div>
 
@@ -521,6 +525,9 @@
             }
             calculateTimerSetting();
             resetInactivityTimer();
+
+            updateProgramEndTimes();
+            setInterval(updateProgramEndTimes, 60000);
         };
 
         function calculateTimerSetting() {
@@ -750,6 +757,24 @@
 
             calculateTimerSetting();
             resetInactivityTimer();
+        }
+
+        function updateProgramEndTimes() {
+            const now = new Date();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            programButtons.forEach(button => {
+                const duration = parseInt(button.dataset.duration);
+                const endTimeMinutes = (currentMinutes + duration) % (24 * 60);
+                const endHours = Math.floor(endTimeMinutes / 60);
+                const endMins = endTimeMinutes % 60;
+                const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+
+                const endTimeSpan = button.querySelector('.end-time');
+                if (endTimeSpan) {
+                    endTimeSpan.textContent = `Endet ${endTimeStr}`;
+                }
+            });
         }
     </script>
 </body>
