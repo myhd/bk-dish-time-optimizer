@@ -776,6 +776,22 @@
                 }
             });
         }
+
+        // Add this event listener after the existing keypad button handlers
+        document.addEventListener('keydown', (event) => {
+            // Check if the pressed key is a number
+            if (/^[0-9]$/.test(event.key)) {
+                const digit = event.key;
+                if (isValidInput(digit)) {
+                    const currentField = document.getElementById(digits[currentDigitIndex]);
+                    currentField.value = digit;
+                    currentDigitIndex = (currentDigitIndex + 1) % 4;
+                    highlightCurrentDigit();
+                    calculateTimerSetting();
+                    resetInactivityTimer();
+                }
+            }
+        });
     </script>
 </body>
 
