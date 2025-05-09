@@ -387,7 +387,7 @@
         </div>
 
         <div class="timer-setting-container">
-            <span>Stelle Timer <span id="timerSetting"></span> oder <a href="#" id="magicLink">BestSelect</a></span>
+            <span><span id="timerSetting"></span></span>
         </div>
 
         <div class="preset-buttons">
@@ -612,7 +612,7 @@
             const emoji = getEmoji(timeDiffMinutes);
             timeDiffText.innerHTML = `<span class="emoji">${emoji}</span> ${timeDiffStr} ${earlierLater} beendet`;
 
-            document.getElementById('timerSetting').textContent = `${timerSettingStr} (Knopf ${buttonPresses}× drücken)`;
+            document.getElementById('timerSetting').innerHTML = `Wähle <span style="background-color: rgb(250, 232, 31); padding: 2px 4px; border-radius: 4px;">${buttonPresses}×P</span> oder <a href="#" id="magicLink">BestSelect</a>`;
 
             document.getElementById('magicLink').addEventListener('click', (e) => {
                 e.preventDefault();
