@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Layout Preview — Split-Button</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: ['selector', '[data-theme="dark"]'],
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            canvas: 'var(--canvas)',
+            ink: 'var(--ink)',
+            muted: 'var(--muted)',
+            line: 'var(--line)',
+            soft: 'var(--soft)',
+          },
+        },
+      },
+    };
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root,
+    [data-theme="light"] {
+      --canvas: #ffffff;
+      --ink: #111111;
+      --muted: #6b6b6b;
+      --line: #e5e5e5;
+      --soft: #f0f0f0;
+      --page: #e8e8e8;
+      --hit: #ebebeb;
+    }
+    [data-theme="dark"] {
+      --canvas: #0a0a0a;
+      --ink: #f2f2f2;
+      --muted: #9a9a9a;
+      --line: #2a2a2a;
+      --soft: #1c1c1c;
+      --page: #141414;
+      --hit: #2a2a2a;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      background: var(--page);
+      color: var(--ink);
+    }
+
+    .t-body { font-size: 16px; line-height: 1.35; font-weight: 400; }
+    .t-strong { font-size: 16px; line-height: 1.35; font-weight: 600; }
+    .t-display { font-size: 40px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+    .icon {
+      width: 1.15em;
+      height: 1.15em;
+      display: inline-block;
+      vertical-align: -0.15em;
+      flex-shrink: 0;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .icon-lg { width: 22px; height: 22px; }
+    .icon-sm { width: 18px; height: 18px; }
+
+    .phone {
+      width: 390px;
+      height: 844px;
+      background: var(--canvas);
+      color: var(--ink);
+      border-radius: 36px;
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+      overflow: hidden;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-inner {
+      height: 100%;
+      padding: 48px 20px 28px;
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      gap: 16px;
+    }
+    .notch {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 28px;
+      background: #000;
+      border-radius: 18px;
+      z-index: 2;
+    }
+
+    .hero-badge {
+      aspect-ratio: 5 / 3;
+      max-width: 220px;
+      border: 1.5px solid var(--ink);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 18px;
+      transition: box-shadow 180ms ease, transform 180ms ease;
+    }
+    .hero-badge.flash {
+      box-shadow: 0 0 0 3px var(--ink);
+      transform: scale(1.02);
+    }
+    .delay-icon { width: 42px; height: 42px; color: var(--ink); flex-shrink: 0; }
+
+    .prog-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .prog {
+      position: relative;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 8px;
+      background: var(--canvas);
+      text-align: left;
+      color: inherit;
+      width: calc(25% - 6px);
+      min-width: 72px;
+      flex: 0 0 calc(25% - 6px);
+    }
+    .prog[aria-selected="true"] {
+      border-color: var(--ink);
+      background: var(--soft);
+    }
+    .prog.is-dim { opacity: 0.4; }
+    .prog.is-locked {
+      border-color: var(--ink);
+      background: var(--soft);
+    }
+
+    /* L1 — Corner pin */
+    .prog-lock-corner {
+      position: absolute;
+      right: 5px;
+      bottom: 5px;
+      width: 14px;
+      height: 14px;
+      color: var(--ink);
+    }
+
+    /* L2 — Mini-Badge */
+    .prog-lock-badge {
+      position: absolute;
+      right: 4px;
+      bottom: 4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      background: var(--ink);
+      color: var(--canvas);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .prog-lock-badge svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    /* L2+L3 — Footer: Nummer links, Mini-Badge-Lock rechts */
+    .prog.has-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 10px 8px 8px;
+    }
+    .prog-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 18px;
+      gap: 4px;
+    }
+    .prog-footer .prog-lock-badge {
+      position: static;
+      flex-shrink: 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px 12px;
+      background: var(--soft);
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--soft);
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* Split: ‹ Zeit › — Hits hinter dem Face (Klicks gehen durch pointer-events:none) */
+    .split-step {
+      position: relative;
+      width: 100%;
+      min-height: 64px;
+      border-radius: 999px;
+      background: var(--soft);
+      overflow: hidden;
+    }
+    .split-hit {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      border: none;
+      padding: 0;
+      margin: 0;
+      background: transparent;
+      cursor: pointer;
+      z-index: 1; /* hinter Chevrons + Zahlen */
+      -webkit-tap-highlight-color: transparent;
+    }
+    .split-hit.split-earlier { left: 0; }
+    .split-hit.split-later { right: 0; }
+    .split-hit:active { background: var(--hit); }
+    .split-face {
+      position: relative;
+      z-index: 2; /* vor Hit-Feedback */
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr) 18px;
+      align-items: center;
+      column-gap: 4px; /* ursprünglicher, enger Abstand */
+      padding: 12px 12px;
+      min-height: 64px;
+      pointer-events: none; /* Klicks erreichen die Hits darunter */
+    }
+    .split-face .chev {
+      width: 18px;
+      height: 18px;
+      color: var(--muted);
+      display: block;
+    }
+    .split-face .odo {
+      justify-content: center;
+      min-height: 0;
+      width: 100%;
+    }
+
+    .label { color: var(--muted); }
+    .variant-label { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .variant-note { font-size: 16px; color: var(--muted); margin-bottom: 14px; max-width: 390px; }
+    .time-block {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 18px 0;
+    }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    /* Labels / times / sublabels as shared rows → same baseline height */
+    .time-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 16px;
+      row-gap: 8px;
+      align-items: center;
+    }
+    .time-pair .wish-time {
+      display: flex;
+      align-items: center;
+      min-height: 64px; /* = .split-half min-height */
+      font-size: 40px;
+      line-height: 1;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    .inline-icon { display: inline-flex; align-items: center; gap: 6px; }
+
+    /* Odometer — Ziffern rollen vertikal raus */
+    .odo {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+      min-height: 64px;
+      font-size: 40px;
+      line-height: 1;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
+    .odo-colon {
+      width: 0.32em;
+      text-align: center;
+      opacity: 0.85;
+    }
+    .odo-digit {
+      position: relative;
+      width: 0.62em;
+      height: 1em;
+      overflow: hidden;
+    }
+    .odo-digit .odo-static,
+    .odo-ribbon > span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 1em;
+    }
+    .odo-ribbon {
+      display: flex;
+      flex-direction: column;
+      will-change: transform;
+      transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+  </style>
+</head>
+<body class="t-body">
+  <!-- Inline icon set (no CDN) — Tabler-ähnliche Stroke-Icons -->
+  <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden" aria-hidden="true">
+    <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M15 6l-6 6 6 6" />
+    </symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 6l6 6-6 6" />
+    </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7" />
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" />
+    </symbol>
+    <symbol id="i-lock-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 11V7a4 4 0 0 1 8 0" />
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+    </symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4" />
+      <path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4" />
+    </symbol>
+    <symbol id="delay-icon-symbol" viewBox="0 0 73.5741225 67.4832826" fill="none">
+      <path d="M65.1679519,33.5052358c0-17.4868352-14.1758809-31.6627161-31.6627161-31.6627161S1.8425196,16.0184005,1.8425196,33.5052358s14.1758809,31.6627161,31.6627161,31.6627161" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.6850393"/>
+      <polyline points="19.1988094 33.5052358 33.5052358 33.5052358 33.5052358 9.7183352" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.1181102"/>
+      <path d="M64.664173,42.7518868l-7.7080712-8.0686745c-.4234778-.4432892-.109278-1.1779766.5037789-1.1779766h15.4161424c.6130569,0,.9272567.7346874.5037789,1.1779766l-7.7080712,8.0686745c-.2744261.2872645-.7331316.2872645-1.0075577,0Z" fill="currentColor"/>
+      <g fill="currentColor">
+        <path d="M41.6470553,67.1707826l4.6845703-26.3945312h3.2138672l-1.8916016,10.2675781h.2207031c.5019531-1.0898438,1.2363281-1.9443359,2.2041016-2.5625.9667969-.6181641,2.1542969-.9277344,3.5634766-.9277344,1.3710938,0,2.4970703.2851562,3.3789062.8544922s1.5371094,1.3134766,1.9658203,2.2314453c.4287109.9189453.6425781,1.9042969.6425781,2.9570312,0,.4902344-.0361328,1.0078125-.1103516,1.5527344-.0732422.5449219-.1591797,1.0869141-.2568359,1.625l-1.8369141,10.3964844h-3.2324219l1.8730469-10.5800781c.0488281-.2695312.1015625-.6269531.15625-1.0742188.0556641-.4472656.0830078-.8789062.0830078-1.2949219,0-1.0654297-.2792969-1.9960938-.8359375-2.7919922-.5576172-.7958984-1.5214844-1.1943359-2.8925781-1.1943359-1.1025391,0-2.0488281.2666016-2.8378906.7998047-.7900391.5322266-1.4238281,1.2392578-1.9013672,2.1210938s-.8085938,1.8427734-.9921875,2.8837891l-1.9648438,11.1308594h-3.2333984Z"/>
+        <path d="M61.908774,64.9481264c0-.7587891.2509766-1.3867188.7529297-1.8828125s1.1083984-.7441406,1.8183594-.7441406c.7470703,0,1.375.2480469,1.8828125.7441406s.7626953,1.1240234.7626953,1.8828125c0,.7226562-.2548828,1.3261719-.7626953,1.8095703s-1.1357422.7255859-1.8828125.7255859c-.7099609,0-1.3164062-.2421875-1.8183594-.7255859s-.7529297-1.0869141-.7529297-1.8095703Z"/>
+      </g>
+    </symbol>
+  </svg>
+
+  <header class="sticky top-0 z-20 border-b border-line bg-[var(--page)]/95 backdrop-blur px-6 py-4 flex items-center justify-between gap-4">
+    <div>
+      <div class="t-strong">Layout Preview · Lock L2+L3</div>
+      <div class="label">Footer-Zeile · Nummer links · Mini-Badge-Lock rechts</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="flashDemo" type="button" class="chip">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8.1 8.1 0 0 0 4.5 9M4 5v4h4"/><path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 19v-4h-4"/></svg>
+        Drift-Flash
+      </button>
+      <button id="themeToggle" type="button" class="chip" aria-label="Theme umschalten">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-theme-icon><circle cx="12" cy="12" r="4"/><path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7"/></svg>
+        <span id="themeLabel">Light</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="px-6 py-8 flex flex-wrap gap-10 justify-center items-start">
+
+    <section>
+      <div class="variant-label">L2+L3 — gewählt</div>
+      <p class="variant-note">Footer-Zeile: Programmnummer links, Mini-Badge-Lock rechts (nur wenn gelockt).</p>
+      <div class="phone">
+        <div class="notch"></div>
+        <div class="phone-inner">
+          <div class="flex items-center justify-between">
+            <div class="label">Programm</div>
+            <button type="button" class="btn-icon theme-local" aria-label="Theme">
+              <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" data-theme-icon><circle cx="12" cy="12" r="4"/><path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7"/></svg>
+            </button>
+          </div>
+          <div class="prog-wrap">
+            <button class="prog has-footer is-locked" aria-selected="true">
+              <div class="t-strong">Eco</div>
+              <div class="prog-footer">
+                <span class="label">1</span>
+                <span class="prog-lock-badge" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                </span>
+              </div>
+            </button>
+            <button class="prog has-footer"><div class="t-strong">Hygiene</div><div class="prog-footer"><span class="label">3</span></div></button>
+            <button class="prog has-footer"><div class="t-strong">Schnell</div><div class="prog-footer"><span class="label">4</span></div></button>
+            <button class="prog has-footer"><div class="t-strong">Leise</div><div class="prog-footer"><span class="label">5</span></div></button>
+            <button class="prog has-footer is-dim"><div class="t-strong">Vorspülen</div><div class="prog-footer"><span class="label">6</span></div></button>
+            <button class="prog has-footer is-dim"><div class="t-strong">Glas</div><div class="prog-footer"><span class="label">7</span></div></button>
+          </div>
+          <div class="label">Long-press = feststellen</div>
+          <div class="time-block">
+            <div class="time-pair">
+              <div class="label">Wunschzeit</div>
+              <div class="label">Tatsächlich</div>
+              <div class="wish-time">06:30</div>
+              <div class="split-step" data-split>
+                <button type="button" class="split-hit split-earlier" aria-label="Früher" data-dir="-1"></button>
+                <button type="button" class="split-hit split-later" aria-label="Später" data-dir="1"></button>
+                <div class="split-face">
+                  <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+                  <div class="odo" data-odo data-time="06:40" aria-label="06:40">
+                    <span class="odo-digit" data-i="0"><span class="odo-static">0</span></span>
+                    <span class="odo-digit" data-i="1"><span class="odo-static">6</span></span>
+                    <span class="odo-colon">:</span>
+                    <span class="odo-digit" data-i="2"><span class="odo-static">4</span></span>
+                    <span class="odo-digit" data-i="3"><span class="odo-static">0</span></span>
+                  </div>
+                  <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                </div>
+              </div>
+              <div class="label">morgen</div>
+              <div class="label">10′ später</div>
+            </div>
+          </div>
+          <div class="mt-auto">
+            <div class="label mb-2">Verzögerungstaste</div>
+            <div class="hero-badge" data-hero>
+              <span class="t-display">12</span><span class="t-display">×</span>
+              <svg class="delay-icon" viewBox="0 0 73.5741225 67.4832826" aria-hidden="true"><use href="#delay-icon-symbol"></use></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const root = document.documentElement;
+
+    const ICON_SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7"/>';
+    const ICON_MOON = '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>';
+
+    function setThemeIcons(dark) {
+      document.querySelectorAll('[data-theme-icon]').forEach((svg) => {
+        svg.innerHTML = dark ? ICON_SUN : ICON_MOON;
+      });
+      document.getElementById('themeLabel').textContent = dark ? 'Light' : 'Dark';
+    }
+
+    function applyTheme(theme) {
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('dto-layout-preview-theme-r4', theme);
+      setThemeIcons(theme === 'dark');
+    }
+
+    const saved = localStorage.getItem('dto-layout-preview-theme-r4');
+    applyTheme(saved === 'light' ? 'light' : 'dark');
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    });
+    document.querySelectorAll('.theme-local').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+      });
+    });
+
+    document.getElementById('flashDemo').addEventListener('click', () => {
+      document.querySelectorAll('[data-hero]').forEach((hero) => {
+        const num = hero.querySelector('.t-display');
+        if (num && /^\d+$/.test(num.textContent.trim())) {
+          num.textContent = String(parseInt(num.textContent, 10) === 12 ? 11 : 12);
+        }
+        hero.classList.add('flash');
+        setTimeout(() => hero.classList.remove('flash'), 450);
+      });
+    });
+
+    function stepTime(text, dirMinutes) {
+      const [h, m] = text.split(':').map(Number);
+      let total = h * 60 + m + dirMinutes;
+      if (total < 0) total += 24 * 60;
+      total %= 24 * 60;
+      return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+    }
+
+    function digitsOf(timeStr) {
+      return timeStr.replace(':', '').split('');
+    }
+
+    function digitSequence(fromDigit, toDigit, dir) {
+      const a = parseInt(fromDigit, 10);
+      const b = parseInt(toDigit, 10);
+      const seq = [a];
+      if (a === b) return seq;
+      let x = a;
+      // Kurzer Spin: bis zum Ziel, maximal eine volle Umdrehung
+      for (let n = 0; n < 10; n++) {
+        x = dir > 0 ? (x + 1) % 10 : (x + 9) % 10;
+        seq.push(x);
+        if (x === b) break;
+      }
+      return seq;
+    }
+
+    function odoTo(odo, nextTime, dir) {
+      const prev = odo.getAttribute('data-time') || '00:00';
+      if (prev === nextTime) return;
+      const from = digitsOf(prev);
+      const to = digitsOf(nextTime);
+      odo.setAttribute('data-time', nextTime);
+      odo.setAttribute('aria-label', nextTime);
+
+      odo.querySelectorAll('.odo-digit').forEach((digit) => {
+        const i = parseInt(digit.getAttribute('data-i'), 10);
+        if (from[i] === to[i]) return;
+
+        const seq = digitSequence(from[i], to[i], dir);
+        const ribbon = document.createElement('div');
+        ribbon.className = 'odo-ribbon';
+        seq.forEach((n) => {
+          const span = document.createElement('span');
+          span.textContent = String(n);
+          ribbon.appendChild(span);
+        });
+        digit.innerHTML = '';
+        digit.appendChild(ribbon);
+        ribbon.style.transform = 'translateY(0)';
+
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            ribbon.style.transform = `translateY(-${seq.length - 1}em)`;
+          });
+        });
+
+        const finish = (e) => {
+          if (e.target !== ribbon || e.propertyName !== 'transform') return;
+          digit.innerHTML = `<span class="odo-static">${to[i]}</span>`;
+          ribbon.removeEventListener('transitionend', finish);
+        };
+        ribbon.addEventListener('transitionend', finish);
+      });
+    }
+
+    document.querySelectorAll('[data-split]').forEach((rootEl) => {
+      rootEl.querySelectorAll('[data-dir]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const odo = rootEl.querySelector('[data-odo]');
+          if (!odo) return;
+          const dir = parseInt(btn.getAttribute('data-dir'), 10);
+          const prev = odo.getAttribute('data-time') || '00:00';
+          const next = stepTime(prev, dir * 10);
+          odoTo(odo, next, dir);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
