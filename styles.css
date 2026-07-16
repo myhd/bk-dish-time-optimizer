@@ -362,6 +362,15 @@ body {
     scale(1.35);
 }
 
+.time-connection.is-scrubbing .overview-mark {
+  transition: none;
+}
+
+.time-connection.is-scrubbing .overview-mark.is-near {
+  opacity: 1;
+  transform: translateY(calc(var(--stack-index, 0) * var(--overview-stack-step)));
+}
+
 .overview-thumb {
   --thumb-color: var(--ink);
   position: absolute;
@@ -375,7 +384,7 @@ body {
   box-shadow:
     0 0 0 var(--overview-thumb-outline) var(--canvas),
     0 0 8px 4px color-mix(in srgb, var(--canvas) 72%, transparent);
-  z-index: 3;
+  z-index: 20;
   pointer-events: none;
   transition:
     left 170ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -387,12 +396,22 @@ body {
   will-change: left;
 }
 
+.time-connection.is-scrubbing .overview-thumb {
+  transition:
+    left 0ms linear,
+    width 120ms ease,
+    height 120ms ease,
+    margin 120ms ease,
+    box-shadow 0ms ease,
+    background-color 0ms linear;
+}
+
 .overview-scrub-bubble {
   --scrub-left: 50%;
   position: absolute;
   left: clamp(38px, var(--scrub-left), calc(100% - 38px));
   bottom: calc(11px + var(--scrub-overlay-gap, 16px));
-  z-index: 5;
+  z-index: 30;
   min-width: 68px;
   padding: 9px 13px;
   border-radius: 999px;
@@ -421,6 +440,13 @@ body {
 .overview-scrub-bubble.is-visible {
   opacity: 1;
   transform: translate(-50%, 0) scale(1);
+}
+
+.time-connection.is-scrubbing .overview-scrub-bubble {
+  transition:
+    left 0ms linear,
+    opacity 320ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .overview-scrub-bubble.is-leaving {

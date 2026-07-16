@@ -859,7 +859,8 @@
     );
 
     renderOverview(wishAbs, sol, nowMin, { instantThumb: !fromScrub && !animateDir });
-    if (!fromScrub || prevProgram !== sol.programId) renderPrograms();
+    if (fromScrub) syncProgramSelection();
+    else if (prevProgram !== sol.programId) renderPrograms();
     else syncProgramSelection();
   }
 

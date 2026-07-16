@@ -38,6 +38,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- 2026-07-16 13:32 — Großen Auswahl-Dot und Scrub-Bubble zuverlässig über den gestapelten Programm-Dots angeordnet.
+- 2026-07-16 13:28 — Timeline-Scrubbing beruhigt: Thumb und Bubble folgen schneller, Dots bleiben während des Drags stabil und Programmkarten werden nicht mehr neu aufgebaut.
 - 2026-07-16 13:15 — Scrub-Bubble bleibt beim Überqueren der Null-Linie sichtbar; erster Theme-Klick nach dem Scrubben wird wieder verarbeitet.
 - Erster Tap auf Split-Pill nach Timeline-Scrub (kein `setPointerCapture` / Hits über Face)
 - Hero-Flash-Clipping auf iOS (entfernt; kein Scale/Ring mehr beim Update)
