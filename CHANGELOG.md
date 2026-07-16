@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- 2026-07-16 13:15 — Mehrfach erreichbare Endzeiten mit stabil angeordneten Programm-Dots, Programmindikatoren und lokal gelernter Programmauswahl ergänzt.
+- 2026-07-16 13:07 — Projektregel ergänzt, die bei signifikanten Änderungen automatisch kurze Changelog-Einträge mit Datum und Uhrzeit verlangt.
 - Maschinenprofil `machine-config.js` (Programme, Dauern, Delay-Stufen; Quelle `programmtabelle.pdf`)
 - Überblick-Timeline (±1 h um Wunschzeit) mit farbigen Programm-Dots (`dotColor`)
 - Timeline-Scrub: Ist-Zeit per Slide wählen, Thumb gleitet mit
@@ -21,6 +23,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- 2026-07-16 13:15 — Timeline-Dots, Bézierverbindung, Scrub-Fläche und visuelle Ebenen für eine ruhigere und leichter bedienbare Übersicht überarbeitet.
+- 2026-07-16 13:13 — Zeitabweichung über dem Split-Button auf die kompakte Schreibweise der Scrub-Bubble (`−20′`, `±0′`, `+10′`) umgestellt.
 - UI neu aufgebaut: Programme → Überblick → Wunsch/Ist → Hero
 - Früher/später navigiert erreichbare Endzeiten über `eligibleForAuto`-Programme (mit Lock nur festes Programm)
 - Soft-Clamp: Wunschzeit frei, Ist = frühest Mögliches
@@ -34,5 +38,6 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- 2026-07-16 13:15 — Scrub-Bubble bleibt beim Überqueren der Null-Linie sichtbar; erster Theme-Klick nach dem Scrubben wird wieder verarbeitet.
 - Erster Tap auf Split-Pill nach Timeline-Scrub (kein `setPointerCapture` / Hits über Face)
 - Hero-Flash-Clipping auf iOS (entfernt; kein Scale/Ring mehr beim Update)

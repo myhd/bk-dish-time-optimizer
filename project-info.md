@@ -20,16 +20,18 @@ git_dirty_count: 4
 git_url: https://myhd@github.com/myhd/bk-dish-time-optimizer.git
 venv: false
 size_category: medium
-size_mb: 17.653
+size_mb: 18.386
 start_date: '2024-09-21'
-last_commit_date: '2025-09-15'
-last_fs_activity: '2025-09-15'
-last_modified: '2025-09-15'
-last_activity_at: '2025-09-15T16:54:46.858068+00:00'
-activity_score: 0.0
+last_commit_date: '2026-07-16'
+last_fs_activity: '2026-07-16'
+last_modified: '2026-07-16'
+last_activity_at: '2026-07-16T07:18:15.062054+00:00'
+activity_score: 117.0
 tags:
+- css
 - html
 - image
+- js
 audio: false
 audio_summary: ''
 type:
@@ -50,9 +52,9 @@ documentation_quality:
   confidence: 0.8
   locked: false
 frequency:
-  value: rare
+  value: regular
   source: git
-  confidence: 0.8
+  confidence: 0.75
   locked: false
 intensity: medium
 ecosystems:
@@ -71,15 +73,13 @@ ai_tools:
     evidence: []
 platformio_count: 0
 platformio_roots: []
-needs_attention: true
-needs_attention_signals:
-- id: stale_active
-  confidence: 0.85
-  label: Active but stale (303d)
+needs_attention: false
+needs_attention_signals: []
 archived: false
 lessons: ''
 notes: ''
 marked: false
 user_tags:
 - wohnung
+- someday_public
 ---
