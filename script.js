@@ -956,6 +956,7 @@
 
     // Kein setPointerCapture: auf iOS blockiert das danach oft den ersten Tap auf andere Controls.
     const startDrag = (e) => {
+      if (dragging) return; // ein zweiter Pointer darf den aktiven Drag nicht übernehmen
       if (e.button != null && e.button !== 0) return;
       stopMinuteTimelineMotion();
       dragging = true;

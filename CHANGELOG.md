@@ -23,6 +23,7 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- 2026-07-16 15:56 — Scrubbing über die Überblick-Timeline reagiert flüssiger: Thumb-Bewegung läuft jetzt über eine GPU-beschleunigte Transformation statt einer layoutauslösenden Positionierung, und die Trefferberechnung während des Ziehens misst die Timeline-Geometrie nur noch einmal pro Drag statt bei jeder Mausbewegung neu.
 - 2026-07-16 14:25 — Odometer auf dauerhafte Zifferntrommeln umgestellt: schnelle Scrub-Wechsel laufen aus der sichtbaren Zwischenposition weiter, ohne DOM-Neuaufbau oder Sprünge.
 - 2026-07-16 14:16 — Timeline-Umbau: Dots und Thumb werden stabil wiederverwendet und gleiten bei minütlichen Aktualisierungen; laufendes Scrubbing verschiebt das Update bis zum Loslassen.
 - 2026-07-16 13:15 — Timeline-Dots, Bézierverbindung, Scrub-Fläche und visuelle Ebenen für eine ruhigere und leichter bedienbare Übersicht überarbeitet.
@@ -40,6 +41,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- 2026-07-16 15:56 — Scrubbing bleibt nicht mehr hängen, wenn während des Ziehens ein zweiter Kontaktpunkt (z. B. Stylus + Finger) die Timeline berührt.
+- 2026-07-16 15:56 — Überblick-Label zeigt wieder das korrekte Zeitfenster (± 1 h statt eines veralteten ± 40 min).
 - 2026-07-16 13:32 — Großen Auswahl-Dot und Scrub-Bubble zuverlässig über den gestapelten Programm-Dots angeordnet.
 - 2026-07-16 13:28 — Timeline-Scrubbing beruhigt: Thumb und Bubble folgen schneller, Dots bleiben während des Drags stabil und Programmkarten werden nicht mehr neu aufgebaut.
 - 2026-07-16 13:15 — Scrub-Bubble bleibt beim Überqueren der Null-Linie sichtbar; erster Theme-Klick nach dem Scrubben wird wieder verarbeitet.
