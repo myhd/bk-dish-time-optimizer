@@ -225,51 +225,130 @@
       .sort((a, b) => a.actualAbs - b.actualAbs);
   }
 
-  function digitSequence(fromDigit, toDigit, dir) {
-    const a = parseInt(fromDigit, 10);
-    const b = parseInt(toDigit, 10);
-    const seq = [a];
-    if (a === b) return seq;
-    let x = a;
-    for (let n = 0; n < 10; n++) {
-      x = dir > 0 ? (x + 1) % 10 : (x + 9) % 10;
-      seq.push(x);
-      if (x === b) break;
+  const ODO_CENTER_CYCLE = 2;
+  const ODO_CYCLE_COUNT = 5;
+  const ODO_NORMAL_DURATION_MS = 420;
+  const ODO_SCRUB_DURATION_MS = 180;
+
+  function odoCenterIndex(char) {
+    return ODO_CENTER_CYCLE * 10 + parseInt(char, 10);
+  }
+
+  function ensureOdoDrum(digit, initialChar) {
+    let drum = digit.querySelector('.odo-drum');
+    if (drum) return drum;
+
+    drum = document.createElement('div');
+    drum.className = 'odo-drum';
+    const fragment = document.createDocumentFragment();
+    for (let cycle = 0; cycle < ODO_CYCLE_COUNT; cycle++) {
+      for (let value = 0; value < 10; value++) {
+        const span = document.createElement('span');
+        span.textContent = String(value);
+        fragment.appendChild(span);
+      }
     }
-    return seq;
+    drum.appendChild(fragment);
+    digit.replaceChildren(drum);
+    drum.style.transition = 'none';
+    drum.style.transform = `translateY(-${odoCenterIndex(initialChar)}em)`;
+    void drum.offsetWidth;
+    drum.style.transition = '';
+    return drum;
+  }
+
+  function setDigitInstant(digit, char) {
+    digit._odoToken = (digit._odoToken || 0) + 1;
+    const existingDrum = digit.querySelector('.odo-drum');
+    if (existingDrum && digit._odoFinish) {
+      existingDrum.removeEventListener('transitionend', digit._odoFinish);
+    }
+    digit._odoFinish = null;
+    if (!/^\d$/.test(char)) {
+      digit.innerHTML = `<span class="odo-static">${char}</span>`;
+      digit.dataset.odoChar = char;
+      return;
+    }
+
+    const drum = ensureOdoDrum(digit, char);
+    drum.style.transition = 'none';
+    drum.style.transform = `translateY(-${odoCenterIndex(char)}em)`;
+    void drum.offsetWidth;
+    drum.style.transition = '';
+    digit.dataset.odoChar = char;
+  }
+
+  function drumTranslateY(drum) {
+    const transform = getComputedStyle(drum).transform;
+    if (!transform || transform === 'none') return 0;
+    try {
+      return new DOMMatrixReadOnly(transform).m42;
+    } catch (_) {
+      const values = transform.match(/matrix(?:3d)?\((.+)\)/);
+      if (!values) return 0;
+      const parts = values[1].split(',').map(Number);
+      return parts.length === 6 ? parts[5] : parts[13] || 0;
+    }
   }
 
   function rollDigit(digit, fromChar, toChar, dir) {
-    if (fromChar === toChar) {
-      digit.innerHTML = `<span class="odo-static">${toChar}</span>`;
-      return;
-    }
+    if (fromChar === toChar) return;
     if (!dir || !/^\d$/.test(fromChar) || !/^\d$/.test(toChar)) {
-      digit.innerHTML = `<span class="odo-static">${toChar}</span>`;
+      setDigitInstant(digit, toChar);
       return;
     }
-    const seq = digitSequence(fromChar, toChar, dir);
-    const ribbon = document.createElement('div');
-    ribbon.className = 'odo-ribbon';
-    seq.forEach((n) => {
-      const span = document.createElement('span');
-      span.textContent = String(n);
-      ribbon.appendChild(span);
-    });
-    digit.innerHTML = '';
-    digit.appendChild(ribbon);
-    ribbon.style.transform = 'translateY(0)';
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        ribbon.style.transform = `translateY(-${seq.length - 1}em)`;
-      });
-    });
-    const finish = (e) => {
-      if (e.target !== ribbon || e.propertyName !== 'transform') return;
-      digit.innerHTML = `<span class="odo-static">${toChar}</span>`;
-      ribbon.removeEventListener('transitionend', finish);
+
+    const drum = ensureOdoDrum(digit, fromChar);
+    if (digit._odoFinish) {
+      drum.removeEventListener('transitionend', digit._odoFinish);
+      digit._odoFinish = null;
+    }
+    const digitHeight = digit.getBoundingClientRect().height;
+    if (digitHeight <= 0) {
+      setDigitInstant(digit, toChar);
+      return;
+    }
+
+    const rawIndex = -drumTranslateY(drum) / digitHeight;
+    const normalizedIndex =
+      ODO_CENTER_CYCLE * 10 + ((rawIndex % 10) + 10) % 10;
+    let targetIndex = odoCenterIndex(toChar);
+    if (dir > 0) {
+      while (targetIndex <= normalizedIndex + 0.001) targetIndex += 10;
+    } else {
+      while (targetIndex >= normalizedIndex - 0.001) targetIndex -= 10;
+    }
+
+    const token = (digit._odoToken || 0) + 1;
+    digit._odoToken = token;
+    digit.dataset.odoChar = toChar;
+    drum.style.transition = 'none';
+    drum.style.transform = `translateY(${-normalizedIndex * digitHeight}px)`;
+    void drum.offsetWidth;
+    const duration = overviewScrubbing
+      ? ODO_SCRUB_DURATION_MS
+      : ODO_NORMAL_DURATION_MS;
+    drum.style.setProperty('--odo-duration', `${duration}ms`);
+    drum.style.transition = '';
+    drum.style.transform = `translateY(${-targetIndex * digitHeight}px)`;
+
+    const finish = (event) => {
+      if (
+        event.target !== drum ||
+        event.propertyName !== 'transform' ||
+        digit._odoToken !== token
+      ) {
+        return;
+      }
+      drum.removeEventListener('transitionend', finish);
+      digit._odoFinish = null;
+      drum.style.transition = 'none';
+      drum.style.transform = `translateY(-${odoCenterIndex(toChar)}em)`;
+      void drum.offsetWidth;
+      drum.style.transition = '';
     };
-    ribbon.addEventListener('transitionend', finish);
+    digit._odoFinish = finish;
+    drum.addEventListener('transitionend', finish);
   }
 
   function syncOdoDigits(odo, chars) {
@@ -289,7 +368,7 @@
     const digits = timeStr.replace(':', '').split('');
     odo.querySelectorAll('.odo-digit').forEach((digit) => {
       const i = parseInt(digit.getAttribute('data-i'), 10);
-      digit.innerHTML = `<span class="odo-static">${digits[i]}</span>`;
+      setDigitInstant(digit, digits[i]);
     });
   }
 
@@ -313,7 +392,7 @@
     const chars = next.split('');
     const digits = syncOdoDigits(odo, chars);
     digits.forEach((digit, i) => {
-      digit.innerHTML = `<span class="odo-static">${chars[i]}</span>`;
+      setDigitInstant(digit, chars[i]);
     });
   }
 
@@ -336,7 +415,7 @@
       const a = from[i + offset];
       const b = toPad[i + offset];
       if (!dir || a === ' ' || a === b || !/^\d$/.test(a) || !/^\d$/.test(b)) {
-        digit.innerHTML = `<span class="odo-static">${b}</span>`;
+        if (a !== b || digit.dataset.odoChar !== b) setDigitInstant(digit, b);
       } else {
         rollDigit(digit, a, b, dir);
       }
@@ -492,7 +571,26 @@
     return idx;
   }
 
-  let overviewCacheKey = '';
+  const MINUTE_TIMELINE_MOTION_MS = 450;
+  let minuteTimelineMotionTimer = 0;
+  let overviewScrubbing = false;
+  let overviewScrubNowMin = null;
+  let pendingMinuteUpdate = false;
+
+  function startMinuteTimelineMotion() {
+    window.clearTimeout(minuteTimelineMotionTimer);
+    els.timeConnection.classList.add('is-minute-updating');
+    minuteTimelineMotionTimer = window.setTimeout(() => {
+      els.timeConnection.classList.remove('is-minute-updating');
+      minuteTimelineMotionTimer = 0;
+    }, MINUTE_TIMELINE_MOTION_MS + 50);
+  }
+
+  function stopMinuteTimelineMotion() {
+    window.clearTimeout(minuteTimelineMotionTimer);
+    minuteTimelineMotionTimer = 0;
+    els.timeConnection.classList.remove('is-minute-updating');
+  }
 
   function overviewMarks(wishAbs, nowMin) {
     const nav = uniqueSortedSolutions(allSolutions(programsForNav(), nowMin));
@@ -525,16 +623,18 @@
   }
 
   function moveOverviewThumb(leftPct, { instant = false } = {}) {
-    const thumb = els.overviewTrack && els.overviewTrack.querySelector('.overview-thumb');
-    if (!thumb) return;
+    const track = els.overviewTrack;
+    const thumb = track && track.querySelector('.overview-thumb');
+    if (!thumb || !track) return;
+    const leftPx = (leftPct / 100) * track.getBoundingClientRect().width;
     if (instant) {
       thumb.style.transition = 'none';
-      thumb.style.left = `${leftPct}%`;
+      thumb.style.setProperty('--thumb-left', `${leftPx}px`);
       void thumb.offsetWidth;
       thumb.style.transition = '';
       return;
     }
-    thumb.style.left = `${leftPct}%`;
+    thumb.style.setProperty('--thumb-left', `${leftPx}px`);
   }
 
   let timeConnectionFrame = 0;
@@ -618,44 +718,110 @@
     timeConnectionFrame = requestAnimationFrame(draw);
   }
 
-  function renderOverview(wishAbs, selectedSol, nowMin, { instantThumb = false } = {}) {
+  function ensureOverviewScaffold(track) {
+    let created = false;
+    if (!track.querySelector('.overview-wish')) {
+      const wish = document.createElement('div');
+      wish.className = 'overview-wish';
+      wish.title = 'Wunschzeit';
+      track.appendChild(wish);
+      created = true;
+    }
+    if (!track.querySelector('.overview-thumb')) {
+      const thumb = document.createElement('div');
+      thumb.className = 'overview-thumb';
+      thumb.hidden = true;
+      track.appendChild(thumb);
+      created = true;
+    }
+    if (!track.querySelector('.overview-scrub-bubble')) {
+      const bubble = document.createElement('div');
+      bubble.className = 'overview-scrub-bubble';
+      bubble.setAttribute('aria-hidden', 'true');
+      track.appendChild(bubble);
+      created = true;
+    }
+    return created;
+  }
+
+  function overviewMarkKey(solution) {
+    return `${solution.programId}:${solution.delayMin}`;
+  }
+
+  function renderOverview(
+    wishAbs,
+    selectedSol,
+    nowMin,
+    { instantThumb = false, animateTimeline = false } = {}
+  ) {
     const track = els.overviewTrack;
     if (!track) return;
 
+    const scaffoldCreated = ensureOverviewScaffold(track);
     const marks = overviewVisibleMarks(wishAbs, nowMin);
-    const key = `${wishAbs}|${marks.map((m) => `${m.actualAbs}:${m.programId}`).join(',')}`;
-    const rebuilt = key !== overviewCacheKey;
-    const bubbleWasVisible =
-      track.querySelector('.overview-scrub-bubble')?.classList.contains('is-visible') || false;
-    if (rebuilt) {
-      overviewCacheKey = key;
-      track.innerHTML =
-        '<div class="overview-wish" title="Wunschzeit"></div>' +
-        '<div class="overview-thumb" hidden></div>' +
-        '<div class="overview-scrub-bubble" aria-hidden="true"></div>';
-      let previousAbs = null;
-      let stackIndex = 0;
-      for (const s of marks) {
-        stackIndex = s.actualAbs === previousAbs ? stackIndex + 1 : 0;
-        previousAbs = s.actualAbs;
-        const el = document.createElement('div');
-        const program = programsById[s.programId];
-        const color = program && program.dotColor;
-        el.className = 'overview-mark' + (color ? ' has-color' : '');
-        el.style.left = `${overviewLeftPct(s.actualAbs, wishAbs)}%`;
-        el.style.setProperty('--stack-index', String(stackIndex));
-        el.style.zIndex = String(10 - stackIndex);
-        if (color) el.style.setProperty('--dot-color', color);
-        el.title = `${s.actualClock}${program ? ` · ${program.label}` : ''}`;
-        el.dataset.abs = String(s.actualAbs);
-        track.appendChild(el);
+    const existingMarks = new Map(
+      [...track.querySelectorAll('.overview-mark')].map((element) => [
+        element.dataset.key,
+        element,
+      ])
+    );
+    const desiredKeys = new Set();
+    let previousAbs = null;
+    let stackIndex = 0;
+
+    for (const solution of marks) {
+      stackIndex = solution.actualAbs === previousAbs ? stackIndex + 1 : 0;
+      previousAbs = solution.actualAbs;
+
+      const key = overviewMarkKey(solution);
+      const program = programsById[solution.programId];
+      const color = program && program.dotColor;
+      let element = existingMarks.get(key);
+      const isNew = !element;
+
+      if (isNew) {
+        element = document.createElement('div');
+        element.className = 'overview-mark';
+        element.dataset.key = key;
+        if (animateTimeline) element.classList.add('is-entering');
+        track.appendChild(element);
+      } else {
+        window.clearTimeout(element._overviewExitTimer);
+        element.classList.remove('is-exiting');
       }
+
+      desiredKeys.add(key);
+      element.classList.toggle('has-color', !!color);
+      element.style.left = `${overviewLeftPct(solution.actualAbs, wishAbs)}%`;
+      element.style.setProperty('--stack-index', String(stackIndex));
+      element.style.zIndex = String(10 - stackIndex);
+      if (color) element.style.setProperty('--dot-color', color);
+      else element.style.removeProperty('--dot-color');
+      element.title = `${solution.actualClock}${program ? ` · ${program.label}` : ''}`;
+      element.dataset.abs = String(solution.actualAbs);
+
+      if (isNew && animateTimeline) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => element.classList.remove('is-entering'));
+        });
+      }
+    }
+
+    for (const [key, element] of existingMarks) {
+      if (desiredKeys.has(key)) continue;
+      if (!animateTimeline) {
+        element.remove();
+        continue;
+      }
+      element.classList.add('is-exiting');
+      element._overviewExitTimer = window.setTimeout(() => {
+        element.remove();
+      }, MINUTE_TIMELINE_MOTION_MS);
     }
 
     const thumb = track.querySelector('.overview-thumb');
     const scrubBubble = track.querySelector('.overview-scrub-bubble');
-    if (bubbleWasVisible && scrubBubble) scrubBubble.classList.add('is-visible');
-    track.querySelectorAll('.overview-mark').forEach((el) => {
+    track.querySelectorAll('.overview-mark:not(.is-exiting)').forEach((el) => {
       el.classList.toggle(
         'is-near',
         !!(selectedSol && el.dataset.abs === String(selectedSol.actualAbs))
@@ -671,7 +837,7 @@
       else thumb.style.removeProperty('--thumb-color');
       thumb.hidden = false;
       moveOverviewThumb(leftPct, {
-        instant: instantThumb || rebuilt,
+        instant: instantThumb || scaffoldCreated,
       });
       if (scrubBubble) {
         scrubBubble.textContent = formatScrubDiff(
@@ -682,22 +848,31 @@
     } else if (thumb) {
       thumb.hidden = true;
     }
-    scheduleTimeConnection(instantThumb || rebuilt ? 0 : 220);
+    scheduleTimeConnection(
+      animateTimeline
+        ? MINUTE_TIMELINE_MOTION_MS + 50
+        : instantThumb || scaffoldCreated
+          ? 0
+          : 220
+    );
   }
 
-  function nearestOverviewMark(clientX) {
+  function nearestOverviewMark(clientX, cache) {
     if (state.wishMinutes == null) return null;
     const track = els.overviewTrack;
     if (!track) return null;
-    const rect = track.getBoundingClientRect();
+    const rect = (cache && cache.rect) || track.getBoundingClientRect();
     if (rect.width <= 0) return null;
 
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
     const offsetMin = ratio * (OVERVIEW_WINDOW_MIN * 2) - OVERVIEW_WINDOW_MIN;
-    const nowMin = nowMinutes();
+    const nowMin =
+      overviewScrubbing && overviewScrubNowMin != null
+        ? overviewScrubNowMin
+        : nowMinutes();
     const wishAbs = wishAbsolute(state.wishMinutes, nowMin);
     const targetAbs = wishAbs + offsetMin;
-    const marks = overviewMarks(wishAbs, nowMin);
+    const marks = (cache && cache.marks) || overviewMarks(wishAbs, nowMin);
     if (!marks.length) return null;
 
     let best = marks[0];
@@ -737,8 +912,8 @@
     }, 360);
   }
 
-  function scrubOverviewTo(clientX) {
-    const mark = nearestOverviewMark(clientX);
+  function scrubOverviewTo(clientX, cache) {
+    const mark = nearestOverviewMark(clientX, cache);
     if (!mark) return;
     if (state.solution && mark.actualAbs === state.solution.actualAbs) return;
     const dir =
@@ -752,36 +927,58 @@
     const scrubTargets = [tl, els.timeConnectionHitArea].filter(Boolean);
     let dragging = false;
     let activePointerId = null;
+    let dragCache = null;
 
     const onMove = (e) => {
       if (!dragging || e.pointerId !== activePointerId) return;
-      scrubOverviewTo(e.clientX);
+      scrubOverviewTo(e.clientX, dragCache);
     };
 
     const endDrag = (e) => {
       if (!dragging) return;
       if (e && activePointerId != null && e.pointerId !== activePointerId) return;
       dragging = false;
+      overviewScrubbing = false;
+      overviewScrubNowMin = null;
       activePointerId = null;
+      dragCache = null;
       els.timeConnection.classList.remove('is-scrubbing');
       els.programButtons.classList.remove('is-scrubbing');
       window.removeEventListener('pointermove', onMove, true);
       window.removeEventListener('pointerup', endDrag, true);
       window.removeEventListener('pointercancel', endDrag, true);
       hideOverviewScrubBubble();
+      if (pendingMinuteUpdate) {
+        pendingMinuteUpdate = false;
+        requestAnimationFrame(requestMinuteRecompute);
+      }
     };
 
     // Kein setPointerCapture: auf iOS blockiert das danach oft den ersten Tap auf andere Controls.
     const startDrag = (e) => {
       if (e.button != null && e.button !== 0) return;
+      stopMinuteTimelineMotion();
       dragging = true;
+      overviewScrubbing = true;
+      overviewScrubNowMin = nowMinutes();
       activePointerId = e.pointerId;
+      const rect = els.overviewTrack && els.overviewTrack.getBoundingClientRect();
+      dragCache =
+        rect && state.wishMinutes != null
+          ? {
+              rect,
+              marks: overviewMarks(
+                wishAbsolute(state.wishMinutes, overviewScrubNowMin),
+                overviewScrubNowMin
+              ),
+            }
+          : null;
       els.timeConnection.classList.add('is-scrubbing');
       els.programButtons.classList.add('is-scrubbing');
       window.addEventListener('pointermove', onMove, true);
       window.addEventListener('pointerup', endDrag, true);
       window.addEventListener('pointercancel', endDrag, true);
-      scrubOverviewTo(e.clientX);
+      scrubOverviewTo(e.clientX, dragCache);
       showOverviewScrubBubble();
       e.preventDefault();
     };
@@ -796,22 +993,26 @@
     btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
   }
 
-  function bindStepButton(btn, dir) {
+  function bindArmedTap(btn, onActivate) {
     // pointerup statt click: nach Timeline-Gesten liefert iOS oft kein click auf dem ersten Tap.
+    const disabled = () => btn.classList.contains('is-disabled');
     let armed = false;
     btn.addEventListener('pointerdown', (e) => {
-      if (btn.classList.contains('is-disabled')) return;
+      if (disabled()) return;
       if (e.button != null && e.button !== 0) return;
       armed = true;
     });
     btn.addEventListener('pointerup', (e) => {
       if (!armed) return;
       armed = false;
-      if (btn.classList.contains('is-disabled')) return;
+      if (disabled()) return;
       if (e.button != null && e.button !== 0) return;
-      stepSolution(dir);
+      onActivate();
     });
     btn.addEventListener('pointercancel', () => {
+      armed = false;
+    });
+    btn.addEventListener('pointerleave', () => {
       armed = false;
     });
     btn.addEventListener('click', (e) => {
@@ -820,15 +1021,25 @@
         e.preventDefault();
         return;
       }
-      if (btn.classList.contains('is-disabled')) {
+      if (disabled()) {
         e.preventDefault();
         return;
       }
-      stepSolution(dir);
+      onActivate();
     });
   }
 
-  function applySolution(sol, { animateDir = 0, fromScrub = false } = {}) {
+  function bindStepButton(btn, dir) {
+    bindArmedTap(btn, () => stepSolution(dir));
+  }
+
+  function applySolution(
+    sol,
+    { animateDir = 0, fromScrub = false, fromMinuteUpdate = false } = {}
+  ) {
+    if (fromMinuteUpdate) startMinuteTimelineMotion();
+    else stopMinuteTimelineMotion();
+
     const prevProgram = state.selectedProgramId;
     state.solution = sol;
     state.selectedProgramId = sol.programId;
@@ -836,7 +1047,10 @@
     if (animateDir) odoTo(els.actualOdo, sol.actualClock, animateDir);
     else setOdoInstant(els.actualOdo, sol.actualClock);
 
-    const nowMin = nowMinutes();
+    const nowMin =
+      fromScrub && overviewScrubNowMin != null
+        ? overviewScrubNowMin
+        : nowMinutes();
     const wishAbs = wishAbsolute(state.wishMinutes, nowMin);
     els.actualLabel.textContent = formatPossibleDiff(
       signedDiffMinutes(sol.actualAbs, wishAbs)
@@ -858,7 +1072,10 @@
       nav.some((candidate) => candidate.actualAbs > sol.actualAbs)
     );
 
-    renderOverview(wishAbs, sol, nowMin, { instantThumb: !fromScrub && !animateDir });
+    renderOverview(wishAbs, sol, nowMin, {
+      instantThumb: !fromScrub && !animateDir && !fromMinuteUpdate,
+      animateTimeline: fromMinuteUpdate,
+    });
     if (fromScrub) syncProgramSelection();
     else if (prevProgram !== sol.programId) renderPrograms();
     else syncProgramSelection();
@@ -890,7 +1107,7 @@
     };
   }
 
-  function recompute({ preserveDelay = false } = {}) {
+  function recompute({ preserveDelay = false, fromMinuteUpdate = false } = {}) {
     if (state.wishMinutes == null) return;
     const nowMin = nowMinutes();
     const wishAbs = wishAbsolute(state.wishMinutes, nowMin);
@@ -901,7 +1118,15 @@
     }
     if (!sol) sol = bestForProgram(state.selectedProgramId, nowMin, wishAbs);
     if (!sol) return;
-    applySolution(sol, { animateDir: 0 });
+    applySolution(sol, { animateDir: 0, fromMinuteUpdate });
+  }
+
+  function requestMinuteRecompute() {
+    if (overviewScrubbing) {
+      pendingMinuteUpdate = true;
+      return;
+    }
+    recompute({ preserveDelay: true, fromMinuteUpdate: true });
   }
 
   function stepSolution(dir) {
@@ -980,30 +1205,7 @@
   const toggleTheme = () => {
     applyTheme(els.root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
   };
-  let themeToggleArmed = false;
-  els.themeToggle.addEventListener('pointerdown', (e) => {
-    if (e.button != null && e.button !== 0) return;
-    themeToggleArmed = true;
-  });
-  els.themeToggle.addEventListener('pointerup', (e) => {
-    if (!themeToggleArmed) return;
-    themeToggleArmed = false;
-    if (e.button != null && e.button !== 0) return;
-    toggleTheme();
-  });
-  els.themeToggle.addEventListener('pointercancel', () => {
-    themeToggleArmed = false;
-  });
-  els.themeToggle.addEventListener('pointerleave', () => {
-    themeToggleArmed = false;
-  });
-  els.themeToggle.addEventListener('click', (e) => {
-    if (e.detail !== 0) {
-      e.preventDefault();
-      return;
-    }
-    toggleTheme();
-  });
+  bindArmedTap(els.themeToggle, toggleTheme);
 
   els.wishInput.addEventListener('focus', () => {
     requestAnimationFrame(() => els.wishInput.select());
@@ -1042,7 +1244,7 @@
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') recompute({ preserveDelay: true });
   });
-  setInterval(() => recompute({ preserveDelay: true }), 60000);
+  setInterval(requestMinuteRecompute, 60000);
 
   state.wishMinutes = loadWishMinutes() ?? (6 * 60 + 30);
   els.wishInput.value = formatClock(state.wishMinutes);

@@ -23,6 +23,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- 2026-07-16 14:25 — Odometer auf dauerhafte Zifferntrommeln umgestellt: schnelle Scrub-Wechsel laufen aus der sichtbaren Zwischenposition weiter, ohne DOM-Neuaufbau oder Sprünge.
+- 2026-07-16 14:16 — Timeline-Umbau: Dots und Thumb werden stabil wiederverwendet und gleiten bei minütlichen Aktualisierungen; laufendes Scrubbing verschiebt das Update bis zum Loslassen.
 - 2026-07-16 13:15 — Timeline-Dots, Bézierverbindung, Scrub-Fläche und visuelle Ebenen für eine ruhigere und leichter bedienbare Übersicht überarbeitet.
 - 2026-07-16 13:13 — Zeitabweichung über dem Split-Button auf die kompakte Schreibweise der Scrub-Bubble (`−20′`, `±0′`, `+10′`) umgestellt.
 - UI neu aufgebaut: Programme → Überblick → Wunsch/Ist → Hero

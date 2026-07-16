@@ -5,7 +5,6 @@
   --muted: #6b6b6b;
   --line: #e5e5e5;
   --soft: #f0f0f0;
-  --hit: #ebebeb;
   --timeline-line-width: 2px;
   --overview-dot-size: 8px;
   --overview-dot-offset: -4px;
@@ -31,7 +30,6 @@
   --muted: #9a9a9a;
   --line: #2a2a2a;
   --soft: #1c1c1c;
-  --hit: #2a2a2a;
 }
 
 * {
@@ -130,11 +128,6 @@ body {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.icon-sm {
-  width: 18px;
-  height: 18px;
 }
 
 .prog-wrap {
@@ -362,6 +355,19 @@ body {
     scale(1.35);
 }
 
+.time-connection.is-minute-updating .overview-mark {
+  transition:
+    left 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease,
+    transform 240ms ease;
+  will-change: left;
+}
+
+.overview-mark.is-entering,
+.overview-mark.is-exiting {
+  opacity: 0;
+}
+
 .time-connection.is-scrubbing .overview-mark {
   transition: none;
 }
@@ -374,7 +380,7 @@ body {
 .overview-thumb {
   --thumb-color: var(--ink);
   position: absolute;
-  left: 50%;
+  left: 0;
   top: 50%;
   width: var(--overview-thumb-size);
   height: var(--overview-thumb-size);
@@ -386,19 +392,30 @@ body {
     0 0 8px 4px color-mix(in srgb, var(--canvas) 72%, transparent);
   z-index: 20;
   pointer-events: none;
+  transform: translateX(var(--thumb-left, 0px));
   transition:
-    left 170ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 170ms cubic-bezier(0.22, 1, 0.36, 1),
     width 120ms ease,
     height 120ms ease,
     margin 120ms ease,
     box-shadow 170ms ease,
     background-color 120ms ease;
-  will-change: left;
+  will-change: transform;
+}
+
+.time-connection.is-minute-updating .overview-thumb {
+  transition:
+    transform 450ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 120ms ease,
+    height 120ms ease,
+    margin 120ms ease,
+    box-shadow 170ms ease,
+    background-color 120ms ease;
 }
 
 .time-connection.is-scrubbing .overview-thumb {
   transition:
-    left 0ms linear,
+    transform 0ms linear,
     width 120ms ease,
     height 120ms ease,
     margin 120ms ease,
@@ -455,7 +472,10 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .overview-scrub-bubble {
+  .time-connection.is-minute-updating .overview-mark,
+  .time-connection.is-minute-updating .overview-thumb,
+  .overview-scrub-bubble,
+  .odo-drum {
     transition: none;
   }
 }
@@ -605,7 +625,7 @@ body {
 }
 
 .odo-digit .odo-static,
-.odo-ribbon>span {
+.odo-drum>span {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -613,11 +633,12 @@ body {
   height: 1em;
 }
 
-.odo-ribbon {
+.odo-drum {
   display: flex;
   flex-direction: column;
   will-change: transform;
-  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition:
+    transform var(--odo-duration, 420ms) cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .hero-wrap {
