@@ -6,6 +6,10 @@
 window.MACHINE_CONFIG = {
   id: 'bauknecht-default',
   name: 'Bauknecht',
+  /** Sichtbarer Zeitraum vor und nach der Wunschzeit, in Minuten */
+  overviewWindowMin: 60,
+  /** Freiraum zwischen ausgewähltem Punkt und Scrub-Anzeige, in Pixeln */
+  scrubOverlayGapPx: 16,
   /** Startverzögerung in Minuten (Reihenfolge = Tastendrücke 1…n) */
   delayStepsMin: [
     30, 60, 90, 120, 150, 180, 210, 240,
@@ -15,7 +19,7 @@ window.MACHINE_CONFIG = {
   programs: [
     // dotColor: sanfte Überblick-Markierung (nur wenn gesetzt)
     { id: 'p1', label: 'Eco', buttonLabel: '1', durationMin: 220, eligibleForAuto: true, dotColor: '#3d9a4a' },       // 3:40 · 50° · Überblick
-    { id: 'p2', label: 'Sensor', buttonLabel: '2', durationMin: 180, eligibleForAuto: true },     // 1:25–3:00 · Planung: 3:00
+    { id: 'p2', label: 'Sensor', buttonLabel: '2', durationMin: 180, eligibleForAuto: true, dotColor: '#2f83c5' },     // 1:25–3:00 · Planung: 3:00
     { id: 'p3', label: 'Intensiv', buttonLabel: '3', durationMin: 170, eligibleForAuto: true, dotColor: '#e85d4a' },   // 2:50 · 65° · Überblick
     { id: 'p4', label: 'Täglich', buttonLabel: '4', durationMin: 90, eligibleForAuto: true, dotColor: '#8b5cb8' },    // 1:30 · 50° · Überblick
     { id: 'p5', label: 'Nacht', buttonLabel: '5', durationMin: 210, eligibleForAuto: true }, // 3:30 · 50°

@@ -1,95 +1,136 @@
 <!DOCTYPE html>
-<html>
+<html lang="de" data-theme="light">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="white">
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Dishwasher Timer Optimizer</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon.png">
-
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&family=DM+Sans:wght@400;700&display=swap"
-        rel="stylesheet">
-
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" id="statusBarMeta" />
+  <meta name="theme-color" content="#ffffff" id="themeColorMeta" />
+  <title>Spülzeit</title>
+  <link rel="stylesheet" href="styles.css?v=40" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icon.png" />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet" />
 </head>
 
-<body>
-    <div class="content">
-        <div id="program-buttons">
-            <button class="program-button selected" id="p1" data-duration="220" data-description="🌱 Eco">
-                <span class="program-description">🌱 Eco</span>
-                <span class="program-name">1</span>
-                <span class="program-description end-time"></span>
-            </button>
-            <button class="program-button" id="p3" data-duration="170" data-description="🦠 Sanitize">
-                <span class="program-description">🦠 Sanitize</span>
-                <span class="program-name">3</span>
-                <span class="program-description end-time"></span>
-            </button>
-            <button class="program-button" id="p4" data-duration="90" data-description="⚡ Fast">
-                <span class="program-description">⚡ Fast</span>
-                <span class="program-name">4</span>
-                <span class="program-description end-time"></span>
-            </button>
-            <button class="program-button" id="p5" data-duration="210" data-description="🔇 Silent">
-                <span class="program-description">🔇 Silent</span>
-                <span class="program-name">5</span>
-                <span class="program-description end-time"></span>
-            </button>
-        </div>
+<body class="t-body">
+  <div class="app">
+    <div class="topbar">
+      <div class="label" id="machineName">Programm</div>
+      <button type="button" class="btn-icon" id="themeToggle" aria-label="Hell/Dunkel umschalten" title="Theme">
+        <svg class="icon" id="themeIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7" />
+        </svg>
+      </button>
+    </div>
 
-        <div class="time-input-container">
-            <button class="time-adjust-button" id="subtractTime"><i class="fas fa-arrow-left"></i></button>
-            <input type="text" class="time-input highlight" id="digit1" maxlength="1" readonly>
-            <input type="text" class="time-input" id="digit2" maxlength="1" readonly>
-            <span style="font-size: 36px;">:</span>
-            <input type="text" class="time-input" id="digit3" maxlength="1" readonly>
-            <input type="text" class="time-input" id="digit4" maxlength="1" readonly>
-            <button class="time-adjust-button" id="addTime"><i class="fas fa-arrow-right"></i></button>
-        </div>
+    <div class="prog-wrap" id="programButtons"></div>
+    <div class="time-connection" id="timeConnection">
+      <svg class="time-connection-line" id="timeConnectionLine" aria-hidden="true">
+        <rect class="time-connection-hit-area" id="timeConnectionHitArea"></rect>
+        <path class="time-connection-path" id="timeConnectionPath"></path>
+      </svg>
 
-        <div class="finish-time-container">
-            <div class="finish-time-wrapper">
-                <span id="finishTime">20:28</span>
+      <section class="overview" aria-label="Überblick ± 40 min">
+        <div class="overview-title label" id="overviewTitle">Überblick ± 40 min</div>
+        <div class="overview-tl" id="overviewTl">
+          <div class="overview-track" id="overviewTrack"></div>
+        </div>
+      </section>
+
+      <div class="time-block">
+        <div class="time-pair">
+          <div class="label">Wunschzeit</div>
+          <div class="label" id="actualLabel">Möglich: pünktlich</div>
+
+          <input class="wish-field" id="wishInput" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
+            autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="4" placeholder="0630"
+            aria-label="Wunschzeit" />
+
+          <div class="split-step" id="splitStep">
+            <button type="button" class="split-hit split-earlier" id="earlierBtn" aria-label="Früher"></button>
+            <button type="button" class="split-hit split-later" id="laterBtn" aria-label="Später"></button>
+            <div class="split-face">
+              <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+              <div class="odo" id="actualOdo" data-time="00:00" aria-label="Tatsächliche Zielzeit">
+                <span class="odo-digit" data-i="0"><span class="odo-static">0</span></span>
+                <span class="odo-digit" data-i="1"><span class="odo-static">0</span></span>
+                <span class="odo-colon">:</span>
+                <span class="odo-digit" data-i="2"><span class="odo-static">0</span></span>
+                <span class="odo-digit" data-i="3"><span class="odo-static">0</span></span>
+              </div>
+              <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
             </div>
-            <div id="timeDiffText" class="time-diff-text"></div>
-        </div>
+          </div>
 
-        <div class="timer-setting-container">
-            <span><span id="timerSetting"></span></span>
+          <div class="label" id="wishDayHint"></div>
         </div>
-
-        <div class="preset-buttons">
-            <button class="preset-button" id="preset1">06:30</button>
-            <button class="preset-button" id="preset2">08:15</button>
-            <button class="preset-button" id="preset4">18:45</button>
-            <button class="preset-button" id="preset5">22:00</button>
-        </div>
+      </div>
     </div>
 
-    <div class="keypad-container">
-        <div class="keypad">
-            <button class="keypad-button">1</button>
-            <button class="keypad-button">2</button>
-            <button class="keypad-button">3</button>
-            <button class="keypad-button">4</button>
-            <button class="keypad-button">5</button>
-            <button class="keypad-button">6</button>
-            <button class="keypad-button">7</button>
-            <button class="keypad-button">8</button>
-            <button class="keypad-button">9</button>
-            <button class="keypad-button">0</button>
+    <div class="hero-wrap">
+      <div class="hero-row">
+        <div class="hero-col hero-col-pgm">
+          <div class="label">Programm</div>
+          <div class="hero-pgm" id="heroPgm" aria-label="Programm">
+            <div class="hero-pgm-face">
+              <div class="odo" id="heroPgmNum" data-value="–" aria-label="Programm">
+                <span class="odo-digit" data-i="0"><span class="odo-static">–</span></span>
+              </div>
+            </div>
+          </div>
         </div>
+        <div class="hero-col">
+          <div class="label">Verzögerungstaste</div>
+          <div class="hero-badge" id="heroBadge">
+            <div class="hero-badge-face">
+              <div class="odo" id="pressCount" data-value="–" aria-label="Tastendrücke">
+                <span class="odo-digit" data-i="0"><span class="odo-static">–</span></span>
+              </div>
+              <span class="t-display">×</span>
+              <svg class="delay-icon" viewBox="0 0 73.5741225 67.4832826" aria-hidden="true">
+                <use href="#delay-icon-symbol"></use>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- Delay icon inline (file:// safe) -->
+  <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="position:absolute;overflow:hidden"
+    aria-hidden="true">
+    <symbol id="delay-icon-symbol" viewBox="0 0 73.5741225 67.4832826" fill="none">
+      <path
+        d="M65.1679519,33.5052358c0-17.4868352-14.1758809-31.6627161-31.6627161-31.6627161S1.8425196,16.0184005,1.8425196,33.5052358s14.1758809,31.6627161,31.6627161,31.6627161"
+        stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.6850393" />
+      <polyline points="19.1988094 33.5052358 33.5052358 33.5052358 33.5052358 9.7183352" stroke="currentColor"
+        stroke-linecap="round" stroke-linejoin="round" stroke-width="3.1181102" />
+      <path
+        d="M64.664173,42.7518868l-7.7080712-8.0686745c-.4234778-.4432892-.109278-1.1779766.5037789-1.1779766h15.4161424c.6130569,0,.9272567.7346874.5037789,1.1779766l-7.7080712,8.0686745c-.2744261.2872645-.7331316.2872645-1.0075577,0Z"
+        fill="currentColor" />
+      <g fill="currentColor">
+        <path
+          d="M41.6470553,67.1707826l4.6845703-26.3945312h3.2138672l-1.8916016,10.2675781h.2207031c.5019531-1.0898438,1.2363281-1.9443359,2.2041016-2.5625.9667969-.6181641,2.1542969-.9277344,3.5634766-.9277344,1.3710938,0,2.4970703.2851562,3.3789062.8544922s1.5371094,1.3134766,1.9658203,2.2314453c.4287109.9189453.6425781,1.9042969.6425781,2.9570312,0,.4902344-.0361328,1.0078125-.1103516,1.5527344-.0732422.5449219-.1591797,1.0869141-.2568359,1.625l-1.8369141,10.3964844h-3.2324219l1.8730469-10.5800781c.0488281-.2695312.1015625-.6269531.15625-1.0742188.0556641-.4472656.0830078-.8789062.0830078-1.2949219,0-1.0654297-.2792969-1.9960938-.8359375-2.7919922-.5576172-.7958984-1.5214844-1.1943359-2.8925781-1.1943359-1.1025391,0-2.0488281.2666016-2.8378906.7998047-.7900391.5322266-1.4238281,1.2392578-1.9013672,2.1210938s-.8085938,1.8427734-.9921875,2.8837891l-1.9648438,11.1308594h-3.2333984Z" />
+        <path
+          d="M61.908774,64.9481264c0-.7587891.2509766-1.3867188.7529297-1.8828125s1.1083984-.7441406,1.8183594-.7441406c.7470703,0,1.375.2480469,1.8828125.7441406s.7626953,1.1240234.7626953,1.8828125c0,.7226562-.2548828,1.3261719-.7626953,1.8095703s-1.1357422.7255859-1.8828125.7255859c-.7099609,0-1.3164062-.2421875-1.8183594-.7255859s-.7529297-1.0869141-.7529297-1.8095703Z" />
+      </g>
+    </symbol>
+  </svg>
+
+  <script src="machine-config.js?v=36"></script>
+  <script src="script.js?v=41"></script>
 </body>
 
 </html>

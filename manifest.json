@@ -1,8 +1,8 @@
 {
-    "name": "Dishwasher Timer Optimizer",
-    "short_name": "DishTimer",
-    "start_url": "index.html",
-    "display": "standalone",
-    "theme_color": "#ffffff",
-    "background_color": "#ffffff"
+  "name": "Spülzeit",
+  "short_name": "Spülzeit",
+  "start_url": "index.html",
+  "display": "standalone",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a"
 }

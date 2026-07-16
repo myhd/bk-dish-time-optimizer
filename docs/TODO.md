@@ -19,6 +19,8 @@
 ## Later
 
 - [ ] Produktiv: Theme an `prefers-color-scheme`?
-- [ ] Programmdauern / Stufen an echte Maschine feinjustieren
+- [-] Programmdauern / Stufen an echte Maschine feinjustieren
 - [ ] Volle PWA (Service Worker) wenn gewünscht
-- [ ] Drift: Hero-Hinweis wenn sich `n×` durch Zeitablauf ändert (ohne Flash-Scale)
+- [-] Drift: Hero-Hinweis wenn sich `n×` durch Zeitablauf ändert (ohne Flash-Scale)
+- [ ] UI, niedrige Priorität: subtile Idle-Animation für den Wunschzeit-Mittelstrich testen (gelegentliches Cursor-Blinken oder sehr leichte Bewegung, ohne dauerhaft zu nerven)
+- [ ] UI, noch niedrigere Priorität: dezent gestrichelte oder auslaufende Timeline-Enden testen, um weitere Zeiten außerhalb des sichtbaren Bereichs anzudeuten

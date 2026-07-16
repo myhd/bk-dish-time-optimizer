@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bézierlinien – Varianten</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --canvas: #f5f5f3;
+      --card: #ffffff;
+      --ink: #111111;
+      --muted: #6b6b6b;
+      --line: #dededb;
+      --accent: #3d9a4a;
+      --timeline-line-width: 2px;
+    }
+
+    [data-theme="dark"] {
+      --canvas: #111110;
+      --card: #1a1a19;
+      --ink: #f2f2ef;
+      --muted: #a2a29c;
+      --line: #353532;
+      --accent: #54b961;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--canvas);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", sans-serif;
+    }
+
+    .page {
+      width: min(960px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(25px, 4vw, 38px);
+      line-height: 1.05;
+      letter-spacing: -0.025em;
+    }
+
+    .intro {
+      max-width: 620px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    button {
+      flex: 0 0 auto;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: var(--card);
+      color: var(--ink);
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: auto minmax(180px, 1fr) 72px;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+    }
+
+    .controls label {
+      font-weight: 600;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--ink);
+    }
+
+    output {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .variant {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+    }
+
+    .variant-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px 0;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .formula {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .timeline,
+    .connection {
+      fill: none;
+      stroke: var(--line);
+      stroke-width: var(--timeline-line-width);
+      stroke-linecap: round;
+      vector-effect: non-scaling-stroke;
+    }
+
+    .wish-marker {
+      stroke: var(--ink);
+      stroke-width: 2px;
+      stroke-linecap: round;
+    }
+
+    .program-dot {
+      fill: var(--accent);
+      stroke: var(--card);
+      stroke-width: 3px;
+    }
+
+    .thumb {
+      fill: var(--ink);
+      stroke: var(--card);
+      stroke-width: 4px;
+    }
+
+    .control-guide {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1px;
+      stroke-dasharray: 3 4;
+      opacity: 0.3;
+    }
+
+    .control-point {
+      fill: var(--accent);
+      opacity: 0.55;
+    }
+
+    .actual-label {
+      fill: var(--muted);
+      font: 600 20px "IBM Plex Sans", sans-serif;
+    }
+
+    .note {
+      padding: 0 20px 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 680px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: 1fr 64px;
+      }
+
+      .controls label {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div>
+        <h1>Schwung der Verbindungslinie</h1>
+        <p class="intro">
+          Die bisherige adaptive Variante D im Vergleich mit zwei kontinuierlichen
+          Algorithmen. Die neuen Varianten starten bei 0 und verlängern die Griffe
+          über den gesamten Sliderbereich.
+        </p>
+      </div>
+      <button id="themeToggle" type="button" aria-label="Hell/Dunkel umschalten">◐</button>
+    </header>
+
+    <div class="controls">
+      <label for="distance">Horizontale Strecke</label>
+      <input id="distance" type="range" min="0" max="330" value="300" step="1" />
+      <output id="distanceValue" for="distance">300 px</output>
+    </div>
+
+    <section class="grid" id="variants"></section>
+  </main>
+
+  <script>
+    (() => {
+      const VARIANTS = [
+        {
+          name: 'D · Bisher adaptiv',
+          note: 'Referenz aus dem letzten Prototyp; ab 260 px bleibt der Griff konstant.',
+          curve: 'adaptive',
+        },
+        {
+          name: 'E · Kontinuierlich linear',
+          note: 'Direkte Proportion zur Strecke; bei 0 ist auch der Griff 0.',
+          curve: 'linear',
+        },
+        {
+          name: 'F · Umgekehrte Progression',
+          note: 'Wächst direkt nach 0 kräftig und nähert sich danach sanft der Maximallänge.',
+          curve: 'ease-out',
+        },
+      ];
+
+      const grid = document.getElementById('variants');
+      const distance = document.getElementById('distance');
+      const distanceValue = document.getElementById('distanceValue');
+      const START_Y = 58;
+      const END_X = 360;
+      const END_Y = 154;
+
+      function clamp01(value) {
+        return Math.min(1, Math.max(0, value));
+      }
+
+      function smootherstep(value) {
+        const t = clamp01(value);
+        return t * t * t * (t * (t * 6 - 15) + 10);
+      }
+
+      function handleFor(variant, horizontalDistance, verticalDistance) {
+        if (variant.curve === 'linear') {
+          return verticalDistance * 1.05 * (horizontalDistance / 330);
+        }
+
+        if (variant.curve === 'ease-out') {
+          const progress = 1 - (1 - horizontalDistance / 330) ** 3.2;
+          return verticalDistance * 1.15 * progress;
+        }
+
+        const minimum = 8;
+        const maximum = verticalDistance * 0.85;
+        const progress = smootherstep((horizontalDistance - 60) / 200);
+        return minimum + (maximum - minimum) * progress;
+      }
+
+      grid.innerHTML = VARIANTS.map((variant, index) => `
+        <article class="variant">
+          <div class="variant-head">
+            <h2>${variant.name}</h2>
+            <span class="formula" id="formula-${index}"></span>
+          </div>
+          <svg viewBox="0 0 390 205" role="img" aria-label="${variant.name}">
+            <path class="timeline" d="M 20 44 H 370"></path>
+            <line class="wish-marker" x1="220" y1="35" x2="220" y2="53"></line>
+            <circle class="program-dot" cx="270" cy="44" r="5"></circle>
+            <path class="control-guide" id="guide-${index}"></path>
+            <circle class="control-point" id="point-a-${index}" r="3"></circle>
+            <circle class="control-point" id="point-b-${index}" r="3"></circle>
+            <path class="connection" id="path-${index}"></path>
+            <circle class="thumb" id="thumb-${index}" cy="44" r="16"></circle>
+            <text class="actual-label" x="360" y="184" text-anchor="end">Möglich: 20 min fr.</text>
+          </svg>
+          <div class="note">${variant.note}</div>
+        </article>
+      `).join('');
+
+      function render() {
+        const horizontalDistance = Number(distance.value);
+        const startX = END_X - horizontalDistance;
+        const verticalDistance = END_Y - START_Y;
+        distanceValue.textContent = `${horizontalDistance} px`;
+
+        VARIANTS.forEach((variant, index) => {
+          const handle = handleFor(variant, horizontalDistance, verticalDistance);
+          const controlAY = START_Y + handle;
+          const controlBY = END_Y - handle;
+
+          document.getElementById(`path-${index}`).setAttribute(
+            'd',
+            `M ${startX} ${START_Y} C ${startX} ${controlAY}, ${END_X} ${controlBY}, ${END_X} ${END_Y}`
+          );
+          document.getElementById(`guide-${index}`).setAttribute(
+            'd',
+            `M ${startX} ${START_Y} L ${startX} ${controlAY} M ${END_X} ${END_Y} L ${END_X} ${controlBY}`
+          );
+          document.getElementById(`point-a-${index}`).setAttribute('cx', startX);
+          document.getElementById(`point-a-${index}`).setAttribute('cy', controlAY);
+          document.getElementById(`point-b-${index}`).setAttribute('cx', END_X);
+          document.getElementById(`point-b-${index}`).setAttribute('cy', controlBY);
+          document.getElementById(`thumb-${index}`).setAttribute('cx', startX);
+          document.getElementById(`formula-${index}`).textContent =
+            `Griff ${Math.round(handle)} px`;
+        });
+      }
+
+      distance.addEventListener('input', render);
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const root = document.documentElement;
+        root.dataset.theme = root.dataset.theme === 'dark' ? 'light' : 'dark';
+      });
+      render();
+    })();
+  </script>
+</body>
+</html>
