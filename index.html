@@ -20,7 +20,7 @@
 <body class="t-body">
   <div class="app">
     <div class="topbar">
-      <div class="label" id="machineName" data-i18n="program.label">Programm</div>
+      <div class="label" id="machineName">DishTime · <span data-i18n="program.label">Programm</span></div>
       <div class="topbar-actions">
         <div class="lang-switch">
           <button type="button" class="btn-icon" id="langToggle" aria-label="Sprache wechseln" title="Sprache"
@@ -28,8 +28,10 @@
             aria-expanded="false">
             <svg class="icon icon-lang" id="langIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none"
               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M8 5L2 20M8 5l6 15M4.5 14h7" />
-              <path d="M15 3h6M18 3v3M15 10l3-4 3 4M16.5 9h3" />
+              <path d="M7.5 9L2 22M7.5 9l5.5 13M4.3 17h6.4" />
+              <g stroke-linejoin="miter">
+                <path d="M15 4h6M18 4v3.5M14 13l4-5.5 4 5.5" />
+              </g>
             </svg>
           </button>
           <div class="lang-popover" id="langPopover" role="menu" hidden></div>
@@ -101,9 +103,9 @@
     </div>
 
     <div class="hero-wrap">
+      <div class="label hero-instruction" data-i18n="hero.instruction">An der Maschine einstellen</div>
       <div class="hero-row">
         <div class="hero-col hero-col-pgm">
-          <div class="label" data-i18n="program.label">Programm</div>
           <div class="hero-pgm" id="heroPgm" aria-label="Programm" data-i18n-aria="program.label">
             <div class="hero-pgm-face">
               <div class="odo" id="heroPgmNum" data-value="–" aria-label="Programm">
@@ -113,7 +115,6 @@
           </div>
         </div>
         <div class="hero-col">
-          <div class="label" data-i18n="delay.label">Verzögerungstaste</div>
           <div class="hero-badge" id="heroBadge">
             <div class="hero-badge-face">
               <div class="odo" id="pressCount" data-value="–" aria-label="Tastendrücke"

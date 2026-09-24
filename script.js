@@ -59,6 +59,7 @@
   const ICON_SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7"/>';
   const ICON_MOON = '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>';
   const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  const CHECK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
 
   function nowMinutes() {
     const n = new Date();
@@ -106,6 +107,16 @@
     if (h && m) return `${h} ${hUnit} ${m} ${mUnit}`;
     if (h) return `${h} ${hUnit}`;
     return `${m} ${mUnit}`;
+  }
+
+  /** Übersetzter Programmname, falls vorhanden (siehe i18n.js) — sonst der
+   *  Roh-Label aus machine-config.js (z.B. bei künftig nutzerdefinierten
+   *  Maschinen/Programmen ohne eigenen i18n-Eintrag). */
+  function programName(p) {
+    if (!p) return '';
+    const key = `programs.${p.id}.name`;
+    const translated = I18N.t(key);
+    return translated === key ? p.label : translated;
   }
 
   function formatActualDiff(diffMin) {
@@ -511,7 +522,7 @@
       if (state.locked && p.id === state.selectedProgramId) btn.classList.add('is-locked');
       btn.innerHTML = `
         <div class="prog-title-row">
-          <span class="prog-name t-strong" style="--program-color: ${p.dotColor || 'var(--muted)'}">${p.label}</span>
+          <span class="prog-name t-strong" style="--program-color: ${p.dotColor || 'var(--muted)'}">${programName(p)}</span>
           <span class="prog-time-indicator" aria-hidden="true"></span>
         </div>
         <div class="prog-footer">
@@ -762,6 +773,13 @@
       track.appendChild(bubble);
       created = true;
     }
+    if (!track.querySelector('.overview-shared-list')) {
+      const list = document.createElement('div');
+      list.className = 'overview-shared-list';
+      list.setAttribute('aria-hidden', 'true');
+      track.appendChild(list);
+      created = true;
+    }
     return created;
   }
 
@@ -818,7 +836,7 @@
       element.style.zIndex = String(10 - stackIndex);
       if (color) element.style.setProperty('--dot-color', color);
       else element.style.removeProperty('--dot-color');
-      element.title = `${solution.actualClock}${program ? ` · ${program.label}` : ''}`;
+      element.title = `${solution.actualClock}${program ? ` · ${programName(program)}` : ''}`;
       element.dataset.abs = String(solution.actualAbs);
 
       if (isNew && animateTimeline) {
@@ -842,6 +860,7 @@
 
     const thumb = track.querySelector('.overview-thumb');
     const scrubBubble = track.querySelector('.overview-scrub-bubble');
+    const sharedList = track.querySelector('.overview-shared-list');
     track.querySelectorAll('.overview-mark:not(.is-exiting)').forEach((el) => {
       el.classList.toggle(
         'is-near',
@@ -866,6 +885,7 @@
         );
         scrubBubble.style.setProperty('--scrub-left', `${leftPct}%`);
       }
+      if (sharedList) sharedList.style.setProperty('--scrub-left', `${leftPct}%`);
     } else if (thumb) {
       thumb.hidden = true;
     }
@@ -933,6 +953,62 @@
     }, 360);
   }
 
+  /** Programme der aktuell am Scrub-Punkt gemeinsam erreichbaren Zeit,
+   *  stabil nach Maschinenreihenfolge sortiert. */
+  function sharedProgramsAtCurrentEndTime() {
+    const ids = sharedEndTimeProgramIds();
+    if (!ids.size) return [];
+    return [...ids]
+      .sort(
+        (a, b) =>
+          (programOrderById.get(a) ?? Number.MAX_SAFE_INTEGER) -
+          (programOrderById.get(b) ?? Number.MAX_SAFE_INTEGER)
+      )
+      .map((id) => ({ id, name: programName(programsById[id]) }));
+  }
+
+  function sharedListEl() {
+    return els.overviewTrack && els.overviewTrack.querySelector('.overview-shared-list');
+  }
+
+  function updateOverviewSharedList(visible) {
+    const list = sharedListEl();
+    if (!list) return;
+    const programs = visible ? sharedProgramsAtCurrentEndTime() : [];
+    if (!visible || programs.length < 2) {
+      list.classList.remove('is-visible');
+      return;
+    }
+    list.innerHTML = programs
+      .map(
+        (p) =>
+          `<div class="overview-shared-list-item${p.id === state.selectedProgramId ? ' is-current' : ''}" data-program-id="${p.id}">${p.name}</div>`
+      )
+      .join('');
+    list.classList.add('is-visible');
+  }
+
+  let sharedListMenuTimer = 0;
+  let sharedListMenuArmed = false;
+
+  /** Nach dem Loslassen: Liste bleibt als antippbares Menü stehen, bis
+   *  man außerhalb klickt, ein Programm wählt, oder 2.5s nichts passiert. */
+  function openOverviewSharedListMenu() {
+    sharedListMenuArmed = true;
+    els.timeConnection.classList.add('has-shared-list-menu');
+    window.clearTimeout(sharedListMenuTimer);
+    sharedListMenuTimer = window.setTimeout(closeOverviewSharedListMenu, 2500);
+  }
+
+  function closeOverviewSharedListMenu() {
+    window.clearTimeout(sharedListMenuTimer);
+    sharedListMenuTimer = 0;
+    if (!sharedListMenuArmed) return;
+    sharedListMenuArmed = false;
+    els.timeConnection.classList.remove('has-shared-list-menu');
+    updateOverviewSharedList(false);
+  }
+
   function scrubOverviewTo(clientX, cache) {
     const mark = nearestOverviewMark(clientX, cache);
     if (!mark) return;
@@ -942,6 +1018,8 @@
     applySolution(mark, { animateDir: dir, fromScrub: true });
   }
 
+  const SHARED_LIST_PULL_PX = 16;
+
   function bindOverviewScrub() {
     const tl = els.overviewTl;
     if (!tl) return;
@@ -949,10 +1027,16 @@
     let dragging = false;
     let activePointerId = null;
     let dragCache = null;
+    let dragStartY = 0;
+    let sharedListPulled = false;
 
     const onMove = (e) => {
       if (!dragging || e.pointerId !== activePointerId) return;
       scrubOverviewTo(e.clientX, dragCache);
+      sharedListPulled = e.clientY - dragStartY > SHARED_LIST_PULL_PX;
+      // Läuft bei jedem Move neu, damit die Liste auch beim reinen
+      // horizontalen Weiterscrubben (während schon gezogen) aktuell bleibt.
+      updateOverviewSharedList(sharedListPulled);
     };
 
     const endDrag = (e) => {
@@ -963,6 +1047,9 @@
       overviewScrubNowMin = null;
       activePointerId = null;
       dragCache = null;
+      if (sharedListPulled) openOverviewSharedListMenu();
+      else updateOverviewSharedList(false);
+      sharedListPulled = false;
       els.timeConnection.classList.remove('is-scrubbing');
       els.programButtons.classList.remove('is-scrubbing');
       window.removeEventListener('pointermove', onMove, true);
@@ -979,12 +1066,16 @@
     const startDrag = (e) => {
       if (dragging) return; // ein zweiter Pointer darf den aktiven Drag nicht übernehmen
       if (e.button != null && e.button !== 0) return;
+      // Tap auf das offen stehende Auswahlmenü darf keinen neuen Scrub starten
+      if (e.target.closest && e.target.closest('.overview-shared-list')) return;
       dismissOverviewHint();
       stopMinuteTimelineMotion();
       dragging = true;
       overviewScrubbing = true;
       overviewScrubNowMin = nowMinutes();
       activePointerId = e.pointerId;
+      dragStartY = e.clientY;
+      sharedListPulled = false;
       const rect = els.overviewTrack && els.overviewTrack.getBoundingClientRect();
       dragCache =
         rect && state.wishMinutes != null
@@ -1109,10 +1200,13 @@
     els.programButtons.querySelectorAll('.prog').forEach((btn) => {
       const id = btn.dataset.id;
       const selected = id === state.selectedProgramId;
+      const shared = matchingProgramIds.has(id);
       if (selected) btn.setAttribute('aria-selected', 'true');
       else btn.removeAttribute('aria-selected');
       btn.classList.toggle('is-locked', state.locked && selected);
-      btn.classList.toggle('has-shared-end-time', matchingProgramIds.has(id));
+      btn.classList.toggle('has-shared-end-time', shared);
+      const indicator = btn.querySelector('.prog-time-indicator');
+      if (indicator) indicator.innerHTML = shared && selected ? CHECK_SVG : '';
     });
   }
 
@@ -1236,6 +1330,7 @@
   function refreshTranslatedContent() {
     I18N.applyStaticTranslations();
     syncOverviewLabels();
+    renderPrograms();
     recompute({ preserveDelay: true });
   }
 
@@ -1329,6 +1424,25 @@
   bindStepButton(els.earlierBtn, -1);
   bindStepButton(els.laterBtn, 1);
   bindOverviewScrub();
+
+  els.overviewTrack.addEventListener('click', (e) => {
+    if (!sharedListMenuArmed) return;
+    const item = e.target.closest('.overview-shared-list-item');
+    if (!item) return;
+    const id = item.dataset.programId;
+    if (id) chooseProgram(id);
+    closeOverviewSharedListMenu();
+  });
+
+  document.addEventListener('pointerdown', (e) => {
+    if (sharedListMenuArmed && !sharedListEl()?.contains(e.target)) {
+      closeOverviewSharedListMenu();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && sharedListMenuArmed) closeOverviewSharedListMenu();
+  });
 
   window.addEventListener('resize', () => scheduleTimeConnection());
   if ('ResizeObserver' in window && els.timeConnection) {

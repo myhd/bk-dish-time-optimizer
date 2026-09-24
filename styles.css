@@ -5,6 +5,7 @@
   --muted: #6b6b6b;
   --line: #e5e5e5;
   --soft: #f0f0f0;
+  --group-fill: var(--soft);
   --timeline-line-width: 2px;
   --overview-dot-size: 8px;
   --overview-dot-offset: -4px;
@@ -30,6 +31,7 @@
   --muted: #9a9a9a;
   --line: #2a2a2a;
   --soft: #1c1c1c;
+  --group-fill: #2a2a2a;
 }
 
 * {
@@ -194,7 +196,7 @@ body {
 
 .prog {
   position: relative;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: 10px;
   padding: 10px 8px 8px;
   background: var(--canvas);
@@ -222,31 +224,34 @@ body {
   text-decoration-color: var(--program-color);
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent 100%);
+  mask-image: linear-gradient(to right, #000 calc(100% - 16px), transparent 100%);
 }
 
 .prog-time-indicator {
   display: none;
-  width: var(--overview-dot-size);
-  height: var(--overview-dot-size);
+  width: 16px;
+  height: 16px;
   flex: 0 0 auto;
-  border: var(--overview-dot-outline) solid var(--ink);
-  border-radius: 50%;
-  opacity: 0.34;
-  transition: opacity 140ms ease, transform 140ms ease;
-}
-
-.prog.has-shared-end-time .prog-time-indicator {
-  display: block;
+  color: var(--ink);
 }
 
 .prog.has-shared-end-time[aria-selected="true"] .prog-time-indicator {
-  background: var(--ink);
-  opacity: 0.82;
+  display: block;
 }
 
-.prog-wrap.is-scrubbing .prog.has-shared-end-time .prog-time-indicator {
-  opacity: 0.95;
-  transform: scale(1.12);
+.prog-time-indicator svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.prog.has-shared-end-time:not([aria-selected="true"]) {
+  background: var(--group-fill);
 }
 
 .prog[aria-selected="true"],
@@ -330,12 +335,25 @@ body {
   cursor: ew-resize;
 }
 
+/* Trefferfläche überlappt den Bereich, in dem das offene
+   Programm-Auswahlmenü liegt, und würde Taps darauf abfangen */
+.time-connection.has-shared-list-menu .time-connection-hit-area {
+  pointer-events: none;
+}
+
 .time-connection.is-scrubbing .time-connection-path {
   stroke: color-mix(in srgb, var(--ink) 50%, var(--line));
   stroke-width: var(--timeline-line-width);
 }
 
-.time-connection>.overview,
+.time-connection>.overview {
+  position: relative;
+  /* höher als .time-block, sonst deckt die Wunschzeit-Sektion (später im
+     DOM, gleicher Stacking-Kontext) das nach unten überlaufende
+     .overview-shared-list zu */
+  z-index: 2;
+}
+
 .time-connection>.time-block {
   position: relative;
   z-index: 1;
@@ -545,10 +563,55 @@ body {
   transform: translate(-50%, -4px) scale(0.99);
 }
 
+.overview-shared-list {
+  --scrub-left: 50%;
+  position: absolute;
+  left: clamp(70px, var(--scrub-left), calc(100% - 70px));
+  top: calc(100% + 14px);
+  z-index: 30;
+  min-width: 96px;
+  padding: 5px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--canvas);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  transform: translate(-50%, -4px) scale(0.97);
+  transform-origin: 50% 0%;
+  pointer-events: none;
+  transition:
+    left 170ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 200ms ease,
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.overview-shared-list.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+  pointer-events: auto;
+}
+
+.overview-shared-list-item {
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  text-align: left;
+  cursor: pointer;
+}
+
+.overview-shared-list-item.is-current {
+  background: var(--ink);
+  color: var(--canvas);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .time-connection.is-minute-updating .overview-mark,
   .time-connection.is-minute-updating .overview-thumb,
   .overview-scrub-bubble,
+  .overview-shared-list,
   .odo-drum {
     transition: none;
   }
@@ -721,6 +784,10 @@ body {
 .hero-wrap {
   margin-top: auto;
   padding-bottom: calc(40px + var(--safe-bottom));
+}
+
+.hero-instruction {
+  margin-bottom: 14px;
 }
 
 .hero-row {
