@@ -1,6 +1,6 @@
 /**
  * Maschinenprofil — Verzögerungsstufen & Programme.
- * Programmdauern aus programmtabelle.pdf (Std:Min → Minuten).
+ * Programmdauern aus private/machine-reference/programmtabelle.pdf (Std:Min → Minuten).
  * Sensor: Spanne 1:25–3:00 → Planung mit 3:00.
  */
 window.MACHINE_CONFIG = {

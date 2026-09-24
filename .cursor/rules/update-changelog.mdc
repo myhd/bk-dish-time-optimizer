@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Changelog updates
 
-After every significant project change, add a short entry to `CHANGELOG.md`.
+After every significant project change, add a short entry to `private/CHANGELOG.md`.
 
 - Treat user-visible features, behavior changes, meaningful UI/UX changes, configuration changes, and bug fixes as significant.
 - Do not add entries for formatting-only edits, temporary prototypes, diagnostics, or other trivial changes.
