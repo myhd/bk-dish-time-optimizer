@@ -1,25 +1,24 @@
-# Bauknecht Dishwasher Timer Optimizer
+# DishTime
 
+DishTime turns a desired finish time into the right delayed-start setting for a dishwasher. It removes the guesswork when the machine lets you delay the start, but not choose when the cycle should finish.
 
-This tool simplifies setting the delayed start timer on your Bauknecht dishwasher. By entering the desired washing program and finish time, it calculates the optimal start time to ensure your cycle completes at the perfect moment.
+[Open DishTime](https://myhd.github.io/bk-dish-time-optimizer/)
 
-## Key Features
+<p align="center">
+  <img src="assets/readme/dishtime-iphone17-galaxy-s25.webp" width="800" alt="DishTime shown in English on an iPhone 17 and in Spanish dark mode on a Samsung Galaxy S25+">
+</p>
 
-1. **Program Selection**: Choose from preset dishwashing programs; values can be adjusted as needed.
+<p align="center"><sub>Device frame based on <a href="https://github.com/mbdev3/react-mockframe">react-mockframe</a> · <a href="assets/readme/react-mockframe-LICENSE.txt">MIT license</a></sub></p>
 
-2. **Timer Calculation**:  calculates best timer setting based on current time, program, and desired finish time.
+## What it does
 
-3. **Finish Time Display**: Shows the actual finish time based on the calculated timer setting.
+- Finds the closest available finish time for the selected program.
+- Shows the delay setting and number of button presses.
+- Makes alternative programs and finish times easy to compare.
+- Supports Deutsch, English, Español, Français, and Nederlands.
 
-4. **Time Difference Indicator**: Displays how much earlier or later the cycle will finish compared to the desired time.
+## Where it runs
 
-5. **BestSelect Function**: Automatically selects the optimal program to finish closest to (but not after) the desired time.
+DishTime is a small client-side web app for modern mobile and desktop browsers. It needs no account or backend and can be added to a phone's home screen.
 
-6. **Mobile**: Designed to be used on a smartphone.
-
-
-This tool helps Bauknecht dishwasher owners set delayed start times more easily, making it useful for scheduling cycles to finish at convenient times or during off-peak electricity hours.
-
-## Acknowledgements
-
-This project was partially developed with the assistance of [Cursor AI](https://www.cursor.com/). Several sections of the code were generated or optimized using AI-based suggestions. 
+The included machine profile is configured for a Bauknecht dishwasher. Program durations and delay steps can be adapted in [`machine-config.js`](machine-config.js).
