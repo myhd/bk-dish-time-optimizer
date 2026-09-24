@@ -3,6 +3,7 @@
   const THEME_KEY = 'dto-theme';
   const WISH_KEY = 'dto-wish-minutes';
   const PROGRAM_PREFERENCE_KEY = 'dto-program-preferences-v1';
+  const OVERVIEW_HINT_SEEN_KEY = 'dto-overview-hint-seen';
   const config = window.MACHINE_CONFIG;
   if (!config) throw new Error('MACHINE_CONFIG missing');
 
@@ -30,6 +31,7 @@
     heroPgm: document.getElementById('heroPgm'),
     heroPgmNum: document.getElementById('heroPgmNum'),
     overviewTitle: document.getElementById('overviewTitle'),
+    overviewHint: document.getElementById('overviewHint'),
     overviewTl: document.getElementById('overviewTl'),
     overviewTrack: document.getElementById('overviewTrack'),
     timeConnection: document.getElementById('timeConnection'),
@@ -40,7 +42,9 @@
     themeToggle: document.getElementById('themeToggle'),
     themeIcon: document.getElementById('themeIcon'),
     themeColorMeta: document.getElementById('themeColorMeta'),
-    statusBarMeta: document.getElementById('statusBarMeta')
+    statusBarMeta: document.getElementById('statusBarMeta'),
+    langToggle: document.getElementById('langToggle'),
+    langPopover: document.getElementById('langPopover')
   };
 
   const OVERVIEW_WINDOW_MIN =
@@ -97,13 +101,15 @@
   function formatMinutes(mins) {
     const h = Math.floor(mins / 60);
     const m = mins % 60;
-    if (h && m) return `${h} h ${m} min`;
-    if (h) return `${h} h`;
-    return `${m} min`;
+    const hUnit = I18N.t('time.hourUnit');
+    const mUnit = I18N.t('time.minuteUnit');
+    if (h && m) return `${h} ${hUnit} ${m} ${mUnit}`;
+    if (h) return `${h} ${hUnit}`;
+    return `${m} ${mUnit}`;
   }
 
-  function formatPossibleDiff(diffMin) {
-    return `Möglich: ${formatScrubDiff(diffMin)}`;
+  function formatActualDiff(diffMin) {
+    return `${I18N.t('actual.actualPrefix')}${formatScrubDiff(diffMin)}`;
   }
 
   function formatScrubDiff(diffMin) {
@@ -113,7 +119,7 @@
 
   function syncOverviewLabels() {
     const range = formatMinutes(OVERVIEW_WINDOW_MIN);
-    const title = `Überblick ± ${range}`;
+    const title = I18N.t('overview.titleTemplate', { range });
     els.overviewTitle.textContent = title;
     els.overviewTrack.style.setProperty(
       '--scrub-overlay-gap',
@@ -561,7 +567,10 @@
     else setOdoValue(els.heroPgmNum, pgmStr);
 
     if (els.heroPgm) {
-      els.heroPgm.setAttribute('aria-label', prog ? `Programm ${pgmStr}` : 'Programm');
+      els.heroPgm.setAttribute(
+        'aria-label',
+        prog ? I18N.t('program.ariaLabelWithNumber', { number: pgmStr }) : I18N.t('program.label')
+      );
     }
   }
 
@@ -619,7 +628,11 @@
 
   function overviewLeftPct(actualAbs, wishAbs) {
     const offset = actualAbs - wishAbs;
-    return ((offset + OVERVIEW_WINDOW_MIN) / (OVERVIEW_WINDOW_MIN * 2)) * 100;
+    const pct = ((offset + OVERVIEW_WINDOW_MIN) / (OVERVIEW_WINDOW_MIN * 2)) * 100;
+    // Punkte außerhalb des ±-Fensters (z.B. gesperrtes Programm weit von der
+    // Wunschzeit entfernt) an den Rand klemmen, statt sie off-screen zu positionieren
+    // — sonst zielt die Verbindungskurve auf einen unsichtbaren Punkt.
+    return Math.max(0, Math.min(100, pct));
   }
 
   function moveOverviewThumb(leftPct, { instant = false } = {}) {
@@ -635,6 +648,14 @@
       return;
     }
     thumb.style.setProperty('--thumb-left', `${leftPx}px`);
+  }
+
+  function dismissOverviewHint() {
+    if (!els.overviewHint || els.overviewHint.hidden) return;
+    els.overviewHint.hidden = true;
+    try {
+      localStorage.setItem(OVERVIEW_HINT_SEEN_KEY, '1');
+    } catch (_) { /* private mode / quota */ }
   }
 
   let timeConnectionFrame = 0;
@@ -723,7 +744,7 @@
     if (!track.querySelector('.overview-wish')) {
       const wish = document.createElement('div');
       wish.className = 'overview-wish';
-      wish.title = 'Wunschzeit';
+      wish.title = I18N.t('wish.label');
       track.appendChild(wish);
       created = true;
     }
@@ -958,6 +979,7 @@
     const startDrag = (e) => {
       if (dragging) return; // ein zweiter Pointer darf den aktiven Drag nicht übernehmen
       if (e.button != null && e.button !== 0) return;
+      dismissOverviewHint();
       stopMinuteTimelineMotion();
       dragging = true;
       overviewScrubbing = true;
@@ -1053,13 +1075,13 @@
         ? overviewScrubNowMin
         : nowMinutes();
     const wishAbs = wishAbsolute(state.wishMinutes, nowMin);
-    els.actualLabel.textContent = formatPossibleDiff(
+    els.actualLabel.textContent = formatActualDiff(
       signedDiffMinutes(sol.actualAbs, wishAbs)
     );
 
     const wishOnNextDay = state.wishMinutes <= nowMin;
     const actualOnNextDay = sol.actualAbs >= MINUTES_PER_DAY;
-    els.wishDayHint.textContent = wishOnNextDay || actualOnNextDay ? 'morgen' : '';
+    els.wishDayHint.textContent = wishOnNextDay || actualOnNextDay ? I18N.t('day.tomorrowHint') : '';
 
     updateHero(sol.presses, { animateDir });
 
@@ -1162,6 +1184,17 @@
     } catch (_) { /* private mode / quota */ }
   }
 
+  /** Nur für den allerersten Start (keine gespeicherte Wunschzeit): früheste
+   *  erreichbare Zeit des Standardprogramms, auf 5 Min. aufgerundet — damit
+   *  die Überblick-Timeline direkt beim Öffnen innerhalb ±1h passt. */
+  function suggestedInitialWishMinutes() {
+    const prog = programsById[state.selectedProgramId];
+    const duration = prog ? prog.durationMin : 0;
+    const earliestAbs = nowMinutes() + config.delayStepsMin[0] + duration;
+    const rounded = Math.ceil(earliestAbs / 5) * 5;
+    return ((rounded % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
+  }
+
   function loadWishMinutes() {
     try {
       const raw = localStorage.getItem(WISH_KEY);
@@ -1198,6 +1231,72 @@
   }
 
   // Init
+  I18N.init();
+
+  function refreshTranslatedContent() {
+    I18N.applyStaticTranslations();
+    syncOverviewLabels();
+    recompute({ preserveDelay: true });
+  }
+
+  function renderLangPopover() {
+    els.langPopover.innerHTML = '';
+    I18N.LANGUAGES.forEach((lang) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'lang-option';
+      btn.setAttribute('role', 'menuitemradio');
+      btn.setAttribute('aria-checked', String(lang.code === I18N.getLocale()));
+      btn.textContent = lang.label;
+      btn.addEventListener('click', () => {
+        I18N.setLocale(lang.code);
+        refreshTranslatedContent();
+        renderLangPopover();
+        closeLangPopover();
+      });
+      els.langPopover.appendChild(btn);
+    });
+  }
+
+  function openLangPopover() {
+    renderLangPopover();
+    els.langPopover.hidden = false;
+    els.langToggle.setAttribute('aria-expanded', 'true');
+  }
+
+  function closeLangPopover() {
+    els.langPopover.hidden = true;
+    els.langToggle.setAttribute('aria-expanded', 'false');
+  }
+
+  bindArmedTap(els.langToggle, () => {
+    if (els.langPopover.hidden) openLangPopover();
+    else closeLangPopover();
+  });
+
+  document.addEventListener('pointerdown', (e) => {
+    if (
+      !els.langPopover.hidden &&
+      !els.langPopover.contains(e.target) &&
+      e.target !== els.langToggle &&
+      !els.langToggle.contains(e.target)
+    ) {
+      closeLangPopover();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !els.langPopover.hidden) closeLangPopover();
+  });
+
+  if (els.overviewHint) {
+    let hintSeen = false;
+    try {
+      hintSeen = localStorage.getItem(OVERVIEW_HINT_SEEN_KEY) === '1';
+    } catch (_) { /* ignore */ }
+    els.overviewHint.hidden = hintSeen;
+  }
+
   programPreferences = loadProgramPreferences();
   syncOverviewLabels();
   const savedTheme = localStorage.getItem(THEME_KEY);
@@ -1247,7 +1346,7 @@
   });
   setInterval(requestMinuteRecompute, 60000);
 
-  state.wishMinutes = loadWishMinutes() ?? (6 * 60 + 30);
+  state.wishMinutes = loadWishMinutes() ?? suggestedInitialWishMinutes();
   els.wishInput.value = formatClock(state.wishMinutes);
   renderPrograms();
   recompute({ preserveDelay: false });

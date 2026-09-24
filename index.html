@@ -20,14 +20,29 @@
 <body class="t-body">
   <div class="app">
     <div class="topbar">
-      <div class="label" id="machineName">Programm</div>
-      <button type="button" class="btn-icon" id="themeToggle" aria-label="Hell/Dunkel umschalten" title="Theme">
-        <svg class="icon" id="themeIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7" />
-        </svg>
-      </button>
+      <div class="label" id="machineName" data-i18n="program.label">Programm</div>
+      <div class="topbar-actions">
+        <div class="lang-switch">
+          <button type="button" class="btn-icon" id="langToggle" aria-label="Sprache wechseln" title="Sprache"
+            data-i18n-aria="lang.toggleAriaLabel" data-i18n-title="lang.title" aria-haspopup="true"
+            aria-expanded="false">
+            <svg class="icon icon-lang" id="langIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M8 5L2 20M8 5l6 15M4.5 14h7" />
+              <path d="M15 3h6M18 3v3M15 10l3-4 3 4M16.5 9h3" />
+            </svg>
+          </button>
+          <div class="lang-popover" id="langPopover" role="menu" hidden></div>
+        </div>
+        <button type="button" class="btn-icon" id="themeToggle" aria-label="Hell/Dunkel umschalten" title="Theme"
+          data-i18n-aria="theme.toggleAriaLabel" data-i18n-title="theme.title">
+          <svg class="icon" id="themeIcon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7" />
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="prog-wrap" id="programButtons"></div>
@@ -38,7 +53,10 @@
       </svg>
 
       <section class="overview" aria-label="Überblick ± 1 h">
-        <div class="overview-title label" id="overviewTitle">Überblick ± 1 h</div>
+        <div class="overview-title-row">
+          <div class="overview-title label" id="overviewTitle"></div>
+          <div class="overview-hint" id="overviewHint" data-i18n="nav.overviewHint" hidden></div>
+        </div>
         <div class="overview-tl" id="overviewTl">
           <div class="overview-track" id="overviewTrack"></div>
         </div>
@@ -46,16 +64,18 @@
 
       <div class="time-block">
         <div class="time-pair">
-          <div class="label">Wunschzeit</div>
-          <div class="label" id="actualLabel">Möglich: pünktlich</div>
+          <div class="label" data-i18n="wish.label">Wunschzeit</div>
+          <div class="label" id="actualLabel"></div>
 
           <input class="wish-field" id="wishInput" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off"
             autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="4" placeholder="0630"
-            aria-label="Wunschzeit" />
+            aria-label="Wunschzeit" data-i18n-aria="wish.label" />
 
           <div class="split-step" id="splitStep">
-            <button type="button" class="split-hit split-earlier" id="earlierBtn" aria-label="Früher"></button>
-            <button type="button" class="split-hit split-later" id="laterBtn" aria-label="Später"></button>
+            <button type="button" class="split-hit split-earlier" id="earlierBtn" aria-label="Früher"
+              data-i18n-aria="nav.earlier"></button>
+            <button type="button" class="split-hit split-later" id="laterBtn" aria-label="Später"
+              data-i18n-aria="nav.later"></button>
             <div class="split-face">
               <svg class="icon chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -83,8 +103,8 @@
     <div class="hero-wrap">
       <div class="hero-row">
         <div class="hero-col hero-col-pgm">
-          <div class="label">Programm</div>
-          <div class="hero-pgm" id="heroPgm" aria-label="Programm">
+          <div class="label" data-i18n="program.label">Programm</div>
+          <div class="hero-pgm" id="heroPgm" aria-label="Programm" data-i18n-aria="program.label">
             <div class="hero-pgm-face">
               <div class="odo" id="heroPgmNum" data-value="–" aria-label="Programm">
                 <span class="odo-digit" data-i="0"><span class="odo-static">–</span></span>
@@ -93,10 +113,11 @@
           </div>
         </div>
         <div class="hero-col">
-          <div class="label">Verzögerungstaste</div>
+          <div class="label" data-i18n="delay.label">Verzögerungstaste</div>
           <div class="hero-badge" id="heroBadge">
             <div class="hero-badge-face">
-              <div class="odo" id="pressCount" data-value="–" aria-label="Tastendrücke">
+              <div class="odo" id="pressCount" data-value="–" aria-label="Tastendrücke"
+                data-i18n-aria="delay.pressCountAriaLabel">
                 <span class="odo-digit" data-i="0"><span class="odo-static">–</span></span>
               </div>
               <span class="t-display">×</span>
@@ -132,6 +153,7 @@
   </svg>
 
   <script src="machine-config.js?v=36"></script>
+  <script src="i18n.js?v=1"></script>
   <script src="script.js?v=46"></script>
 </body>
 
