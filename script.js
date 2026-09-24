@@ -4,15 +4,19 @@
   const WISH_KEY = 'dto-wish-minutes';
   const PROGRAM_PREFERENCE_KEY = 'dto-program-preferences-v1';
   const OVERVIEW_HINT_SEEN_KEY = 'dto-overview-hint-seen';
-  const config = window.MACHINE_CONFIG;
-  if (!config) throw new Error('MACHINE_CONFIG missing');
+  const appConfig = window.APP_CONFIG;
+  const machineConfig = window.MACHINE_CONFIG;
+  if (!appConfig) throw new Error('APP_CONFIG missing');
+  if (!machineConfig) throw new Error('MACHINE_CONFIG missing');
 
-  const programsById = Object.fromEntries(config.programs.map((p) => [p.id, p]));
-  const programOrderById = new Map(config.programs.map((p, index) => [p.id, index]));
+  const programsById = Object.fromEntries(machineConfig.programs.map((p) => [p.id, p]));
+  const programOrderById = new Map(machineConfig.programs.map((p, index) => [p.id, index]));
   let programPreferences = {};
 
   const state = {
-    selectedProgramId: config.programs.find((p) => p.eligibleForAuto)?.id || config.programs[0].id,
+    selectedProgramId:
+      machineConfig.programs.find((p) => p.includedInAutomaticSelection)?.id ||
+      machineConfig.programs[0].id,
     locked: false,
     wishMinutes: null,
     solution: null
@@ -48,13 +52,16 @@
   };
 
   const OVERVIEW_WINDOW_MIN =
-    Number.isFinite(config.overviewWindowMin) && config.overviewWindowMin > 0
-      ? config.overviewWindowMin
+    Number.isFinite(appConfig.overviewWindowMin) && appConfig.overviewWindowMin > 0
+      ? appConfig.overviewWindowMin
       : 60;
   const SCRUB_OVERLAY_GAP_PX =
-    Number.isFinite(config.scrubOverlayGapPx) && config.scrubOverlayGapPx >= 0
-      ? config.scrubOverlayGapPx
+    Number.isFinite(appConfig.scrubOverlayGapPx) && appConfig.scrubOverlayGapPx >= 0
+      ? appConfig.scrubOverlayGapPx
       : 16;
+  const PROGRAM_COLORS = Array.isArray(appConfig.programColors)
+    ? appConfig.programColors
+    : [];
 
   const ICON_SUN = '<circle cx="12" cy="12" r="4"/><path d="M12 3v1M12 20v1M4.2 4.2l.7.7M19.1 19.1l.7.7M3 12h1M20 12h1M4.2 19.8l.7-.7M19.1 4.9l.7-.7"/>';
   const ICON_MOON = '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>';
@@ -109,14 +116,18 @@
     return `${m} ${mUnit}`;
   }
 
-  /** Übersetzter Programmname, falls vorhanden (siehe i18n.js) — sonst der
-   *  Roh-Label aus machine-config.js (z.B. bei künftig nutzerdefinierten
-   *  Maschinen/Programmen ohne eigenen i18n-Eintrag). */
+  /** Returns the localized machine-program name, falling back to English. */
   function programName(p) {
     if (!p) return '';
-    const key = `programs.${p.id}.name`;
-    const translated = I18N.t(key);
-    return translated === key ? p.label : translated;
+    const names = p.names || {};
+    return names[I18N.getLocale()] || names.en || p.id;
+  }
+
+  /** Assigns presentation colors by program order, independent of the machine profile. */
+  function programColor(p) {
+    if (!p) return '';
+    const index = programOrderById.get(p.id);
+    return Number.isInteger(index) ? PROGRAM_COLORS[index] || '' : '';
   }
 
   function formatActualDiff(diffMin) {
@@ -145,7 +156,7 @@
     for (const id of programIds) {
       const prog = programsById[id];
       if (!prog) continue;
-      config.delayStepsMin.forEach((delayMin, idx) => {
+      machineConfig.delayStepsMin.forEach((delayMin, idx) => {
         const actualAbs = nowMin + delayMin + prog.durationMin;
         out.push({
           programId: id,
@@ -161,7 +172,9 @@
 
   function programsForNav() {
     if (state.locked) return [state.selectedProgramId];
-    return config.programs.filter((p) => p.eligibleForAuto).map((p) => p.id);
+    return machineConfig.programs
+      .filter((p) => p.includedInAutomaticSelection)
+      .map((p) => p.id);
   }
 
   function bestForProgram(programId, nowMin, wishAbs) {
@@ -210,7 +223,7 @@
     } catch (_) { /* private mode / quota */ }
   }
 
-  /** Eine Lösung pro Endzeit; bevorzugt Auswahl, dann lokale Gruppen-History, dann Maschinenreihenfolge */
+  /** One solution per finish time: current selection, saved group choice, then machine order. */
   function uniqueSortedSolutions(sols) {
     const groupsByAbs = new Map();
     for (const s of sols) {
@@ -474,7 +487,7 @@
       const program = programsById[programId];
       if (!program) return [];
       const delayMin = endOffset - program.durationMin;
-      const delayIndex = config.delayStepsMin.indexOf(delayMin);
+      const delayIndex = machineConfig.delayStepsMin.indexOf(delayMin);
       if (delayIndex < 0) return [];
       return [{
         programId,
@@ -512,17 +525,17 @@
 
   function renderPrograms() {
     els.programButtons.innerHTML = '';
-    for (const p of config.programs) {
+    for (const p of machineConfig.programs) {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'prog';
       btn.dataset.id = p.id;
-      if (!p.eligibleForAuto) btn.classList.add('is-dim');
+      if (!p.includedInAutomaticSelection) btn.classList.add('is-dim');
       if (p.id === state.selectedProgramId) btn.setAttribute('aria-selected', 'true');
       if (state.locked && p.id === state.selectedProgramId) btn.classList.add('is-locked');
       btn.innerHTML = `
         <div class="prog-title-row">
-          <span class="prog-name t-strong" style="--program-color: ${p.dotColor || 'var(--muted)'}">${programName(p)}</span>
+          <span class="prog-name t-strong" style="--program-color: ${programColor(p) || 'var(--muted)'}">${programName(p)}</span>
           <span class="prog-time-indicator" aria-hidden="true"></span>
         </div>
         <div class="prog-footer">
@@ -640,9 +653,8 @@
   function overviewLeftPct(actualAbs, wishAbs) {
     const offset = actualAbs - wishAbs;
     const pct = ((offset + OVERVIEW_WINDOW_MIN) / (OVERVIEW_WINDOW_MIN * 2)) * 100;
-    // Punkte außerhalb des ±-Fensters (z.B. gesperrtes Programm weit von der
-    // Wunschzeit entfernt) an den Rand klemmen, statt sie off-screen zu positionieren
-    // — sonst zielt die Verbindungskurve auf einen unsichtbaren Punkt.
+    // Clamp points outside the visible range (for example a locked program far
+    // from the target) to the edge so the connection never targets a hidden point.
     return Math.max(0, Math.min(100, pct));
   }
 
@@ -814,7 +826,7 @@
 
       const key = overviewMarkKey(solution);
       const program = programsById[solution.programId];
-      const color = program && program.dotColor;
+      const color = programColor(program);
       let element = existingMarks.get(key);
       const isNew = !element;
 
@@ -870,9 +882,7 @@
 
     if (selectedSol && thumb) {
       const leftPct = overviewLeftPct(selectedSol.actualAbs, wishAbs);
-      const thumbColor =
-        (programsById[selectedSol.programId] && programsById[selectedSol.programId].dotColor) ||
-        '';
+      const thumbColor = programColor(programsById[selectedSol.programId]);
       if (thumbColor) thumb.style.setProperty('--thumb-color', thumbColor);
       else thumb.style.removeProperty('--thumb-color');
       thumb.hidden = false;
@@ -953,8 +963,7 @@
     }, 360);
   }
 
-  /** Programme der aktuell am Scrub-Punkt gemeinsam erreichbaren Zeit,
-   *  stabil nach Maschinenreihenfolge sortiert. */
+  /** Programs sharing the current scrubbed finish time, sorted by machine order. */
   function sharedProgramsAtCurrentEndTime() {
     const ids = sharedEndTimeProgramIds();
     if (!ids.size) return [];
@@ -991,8 +1000,7 @@
   let sharedListMenuTimer = 0;
   let sharedListMenuArmed = false;
 
-  /** Nach dem Loslassen: Liste bleibt als antippbares Menü stehen, bis
-   *  man außerhalb klickt, ein Programm wählt, oder 2.5s nichts passiert. */
+  /** Keep the list tappable until the user clicks outside, selects a program, or waits 2.5s. */
   function openOverviewSharedListMenu() {
     sharedListMenuArmed = true;
     els.timeConnection.classList.add('has-shared-list-menu');
@@ -1034,8 +1042,7 @@
       if (!dragging || e.pointerId !== activePointerId) return;
       scrubOverviewTo(e.clientX, dragCache);
       sharedListPulled = e.clientY - dragStartY > SHARED_LIST_PULL_PX;
-      // Läuft bei jedem Move neu, damit die Liste auch beim reinen
-      // horizontalen Weiterscrubben (während schon gezogen) aktuell bleibt.
+      // Refresh on every move so the list stays current during horizontal scrubbing.
       updateOverviewSharedList(sharedListPulled);
     };
 
@@ -1062,11 +1069,11 @@
       }
     };
 
-    // Kein setPointerCapture: auf iOS blockiert das danach oft den ersten Tap auf andere Controls.
+    // Avoid setPointerCapture: on iOS it often blocks the next tap on another control.
     const startDrag = (e) => {
-      if (dragging) return; // ein zweiter Pointer darf den aktiven Drag nicht übernehmen
+      if (dragging) return; // A second pointer must not take over the active drag.
       if (e.button != null && e.button !== 0) return;
-      // Tap auf das offen stehende Auswahlmenü darf keinen neuen Scrub starten
+      // Tapping the open selection menu must not start another scrub.
       if (e.target.closest && e.target.closest('.overview-shared-list')) return;
       dismissOverviewHint();
       stopMinuteTimelineMotion();
@@ -1102,13 +1109,13 @@
   }
 
   function setStepEnabled(btn, enabled) {
-    // Kein btn.disabled: iOS/WebKit schluckt sonst oft den ersten Tap nach Re-Enable.
+    // Avoid btn.disabled: iOS/WebKit often swallows the first tap after re-enabling.
     btn.classList.toggle('is-disabled', !enabled);
     btn.setAttribute('aria-disabled', enabled ? 'false' : 'true');
   }
 
   function bindArmedTap(btn, onActivate) {
-    // pointerup statt click: nach Timeline-Gesten liefert iOS oft kein click auf dem ersten Tap.
+    // Use pointerup because iOS often omits the first click after a timeline gesture.
     const disabled = () => btn.classList.contains('is-disabled');
     let armed = false;
     btn.addEventListener('pointerdown', (e) => {
@@ -1130,7 +1137,7 @@
       armed = false;
     });
     btn.addEventListener('click', (e) => {
-      // Tastatur (Enter/Space): detail === 0; Touch/Maus bereits per pointerup
+      // Keyboard (Enter/Space) has detail === 0; touch/mouse already used pointerup.
       if (e.detail !== 0) {
         e.preventDefault();
         return;
@@ -1212,7 +1219,7 @@
 
   function solutionFromDelay(programId, delayMin, nowMin) {
     const prog = programsById[programId];
-    const idx = config.delayStepsMin.indexOf(delayMin);
+    const idx = machineConfig.delayStepsMin.indexOf(delayMin);
     if (!prog || idx < 0) return null;
     const actualAbs = nowMin + delayMin + prog.durationMin;
     return {
@@ -1278,13 +1285,12 @@
     } catch (_) { /* private mode / quota */ }
   }
 
-  /** Nur für den allerersten Start (keine gespeicherte Wunschzeit): früheste
-   *  erreichbare Zeit des Standardprogramms, auf 5 Min. aufgerundet — damit
-   *  die Überblick-Timeline direkt beim Öffnen innerhalb ±1h passt. */
+  /** On first launch, round the earliest finish of the default program up to
+   *  five minutes so the overview immediately fits within its visible range. */
   function suggestedInitialWishMinutes() {
     const prog = programsById[state.selectedProgramId];
     const duration = prog ? prog.durationMin : 0;
-    const earliestAbs = nowMinutes() + config.delayStepsMin[0] + duration;
+    const earliestAbs = nowMinutes() + machineConfig.delayStepsMin[0] + duration;
     const rounded = Math.ceil(earliestAbs / 5) * 5;
     return ((rounded % MINUTES_PER_DAY) + MINUTES_PER_DAY) % MINUTES_PER_DAY;
   }
@@ -1406,7 +1412,7 @@
     requestAnimationFrame(() => els.wishInput.select());
   });
   els.wishInput.addEventListener('pointerup', (e) => {
-    // iOS: Auswahl nach Tap nicht sofort wieder aufheben
+    // Preserve the selection after a tap on iOS.
     e.preventDefault();
     els.wishInput.select();
   });

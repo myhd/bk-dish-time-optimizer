@@ -1,15 +1,14 @@
 /**
- * Mehrsprachigkeit: Deutsch ist Quellsprache, alle Locales fallen bei
- * fehlenden Keys automatisch auf Deutsch zurück, damit neue Texte nie
- * einfach verschwinden. Kontext-Notizen zu den Keys stehen in
- * private/i18n-reference.csv (Arbeitsdokument, nicht Teil des Repos).
+ * Shared interface translations. English is the source and fallback locale.
+ * Machine-specific program names live in machine-config.js so each machine
+ * profile remains self-contained. Translation context notes are stored in
+ * private/i18n-reference.csv and are not part of the public repository.
  */
 window.I18N = (function () {
   const STORAGE_KEY = 'dto-lang';
-  const DEFAULT_LOCALE = 'de';
-  const FALLBACK_LOCALE = 'en';
+  const SOURCE_LOCALE = 'en';
 
-  // Alphabetisch nach label sortiert halten (Reihenfolge im Sprach-Pop-over)
+  // Keep this list sorted alphabetically by label for the language popover.
   const LANGUAGES = [
     { code: 'de', label: 'Deutsch' },
     { code: 'en', label: 'English' },
@@ -38,14 +37,7 @@ window.I18N = (function () {
       'nav.overviewHint': 'Zum Wählen tippen',
       'day.tomorrowHint': 'morgen',
       'delay.pressCountAriaLabel': 'Tastendrücke',
-      'hero.instruction': 'Programm und Verzögerung einstellen',
-      'programs.p1.name': 'Eco',
-      'programs.p2.name': 'Sensor',
-      'programs.p3.name': 'Intensiv',
-      'programs.p4.name': 'Täglich',
-      'programs.p5.name': 'Nacht',
-      'programs.p6.name': 'Rapid',
-      'programs.p7.name': 'Glas',
+      'hero.instruction': 'Maschine: Programm und Verzögerung einstellen',
     },
     en: {
       'program.label': 'Program',
@@ -66,14 +58,7 @@ window.I18N = (function () {
       'nav.overviewHint': 'Tap to select',
       'day.tomorrowHint': 'tomorrow',
       'delay.pressCountAriaLabel': 'Button presses',
-      'hero.instruction': 'Set program and delay',
-      'programs.p1.name': 'Eco',
-      'programs.p2.name': 'Sensor',
-      'programs.p3.name': 'Intensive',
-      'programs.p4.name': 'Daily',
-      'programs.p5.name': 'Night',
-      'programs.p6.name': 'Rapid',
-      'programs.p7.name': 'Glass',
+      'hero.instruction': 'Dishwasher: Set program and delay',
     },
     es: {
       'program.label': 'Programa',
@@ -94,14 +79,7 @@ window.I18N = (function () {
       'nav.overviewHint': 'Toca para elegir',
       'day.tomorrowHint': 'mañana',
       'delay.pressCountAriaLabel': 'Pulsaciones',
-      'hero.instruction': 'Configurar programa y retraso',
-      'programs.p1.name': 'Eco',
-      'programs.p2.name': 'Sensor',
-      'programs.p3.name': 'Intensivo',
-      'programs.p4.name': 'Diario',
-      'programs.p5.name': 'Nocturno',
-      'programs.p6.name': 'Rápido',
-      'programs.p7.name': 'Cristal',
+      'hero.instruction': 'Lavavajillas: Configurar programa y retraso',
     },
     fr: {
       'program.label': 'Programme',
@@ -122,14 +100,7 @@ window.I18N = (function () {
       'nav.overviewHint': 'Toucher pour choisir',
       'day.tomorrowHint': 'demain',
       'delay.pressCountAriaLabel': 'Nombre de pressions',
-      'hero.instruction': 'Programme et départ différé',
-      'programs.p1.name': 'Eco',
-      'programs.p2.name': 'Sensor',
-      'programs.p3.name': 'Intensif',
-      'programs.p4.name': 'Quotidien',
-      'programs.p5.name': 'Nuit',
-      'programs.p6.name': 'Rapide',
-      'programs.p7.name': 'Verre',
+      'hero.instruction': 'Lave-vaisselle : Programme et départ différé',
     },
     nl: {
       'program.label': 'Programma',
@@ -150,18 +121,11 @@ window.I18N = (function () {
       'nav.overviewHint': 'Tik om te kiezen',
       'day.tomorrowHint': 'morgen',
       'delay.pressCountAriaLabel': 'Aantal drukken',
-      'hero.instruction': 'Programma en vertraging instellen',
-      'programs.p1.name': 'Eco',
-      'programs.p2.name': 'Sensor',
-      'programs.p3.name': 'Intensief',
-      'programs.p4.name': 'Dagelijks',
-      'programs.p5.name': 'Nacht',
-      'programs.p6.name': 'Snel',
-      'programs.p7.name': 'Glas',
+      'hero.instruction': 'Vaatwasser: Programma en vertraging instellen',
     },
   };
 
-  let current = DEFAULT_LOCALE;
+  let current = SOURCE_LOCALE;
 
   function supportedCodes() {
     return LANGUAGES.map((l) => l.code);
@@ -170,11 +134,11 @@ window.I18N = (function () {
   function detectLocale() {
     const candidates = (navigator.languages && navigator.languages.length
       ? navigator.languages
-      : [navigator.language || FALLBACK_LOCALE]
+      : [navigator.language || SOURCE_LOCALE]
     ).map((tag) => String(tag).slice(0, 2).toLowerCase());
     const supported = supportedCodes();
     const match = candidates.find((code) => supported.includes(code));
-    return match || FALLBACK_LOCALE;
+    return match || SOURCE_LOCALE;
   }
 
   function getLocale() {
@@ -183,12 +147,12 @@ window.I18N = (function () {
 
   function setLocale(code, opts) {
     const persist = !opts || opts.persist !== false;
-    current = supportedCodes().includes(code) ? code : FALLBACK_LOCALE;
+    current = supportedCodes().includes(code) ? code : SOURCE_LOCALE;
     if (persist) {
       try {
         localStorage.setItem(STORAGE_KEY, current);
       } catch (e) {
-        /* localStorage kann in Private-Mode fehlschlagen — Sprache bleibt nur für die Sitzung gesetzt */
+        /* Storage may fail in private browsing; keep the locale for this session only. */
       }
     }
     document.documentElement.setAttribute('lang', current);
@@ -196,7 +160,7 @@ window.I18N = (function () {
 
   function t(key, vars) {
     const table = locales[current] || {};
-    const fallback = locales[DEFAULT_LOCALE] || {};
+    const fallback = locales[SOURCE_LOCALE] || {};
     let str = Object.prototype.hasOwnProperty.call(table, key)
       ? table[key]
       : fallback[key] !== undefined
