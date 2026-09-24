@@ -21,4 +21,4 @@ DishTime turns a desired finish time into the right delayed-start setting for a 
 
 DishTime is a small client-side web app for modern mobile and desktop browsers. It needs no account or backend and can be added to a phone's home screen.
 
-The included machine profile is configured for a Bauknecht dishwasher. Program durations and delay steps can be adapted in [`machine-config.js`](machine-config.js).
+The included profile is configured for a Bauknecht dishwasher. Machine data lives in [`machine-config.js`](machine-config.js); general app settings live in [`app-config.js`](app-config.js).
