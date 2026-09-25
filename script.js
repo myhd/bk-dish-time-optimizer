@@ -28,6 +28,7 @@
     wishInput: document.getElementById('wishInput'),
     wishDayHint: document.getElementById('wishDayHint'),
     actualOdo: document.getElementById('actualOdo'),
+    actualControl: document.getElementById('splitStep'),
     earlierBtn: document.getElementById('earlierBtn'),
     laterBtn: document.getElementById('laterBtn'),
     pressCount: document.getElementById('pressCount'),
@@ -43,6 +44,7 @@
     timeConnectionHitArea: document.getElementById('timeConnectionHitArea'),
     timeConnectionPath: document.getElementById('timeConnectionPath'),
     actualLabel: document.getElementById('actualLabel'),
+    actualLabelText: document.getElementById('actualLabelText'),
     themeToggle: document.getElementById('themeToggle'),
     themeIcon: document.getElementById('themeIcon'),
     themeColorMeta: document.getElementById('themeColorMeta'),
@@ -93,6 +95,18 @@
       return null;
     }
     return null;
+  }
+
+  function formatWishDraft(rawDigits) {
+    let digits = String(rawDigits || '').replace(/\D/g, '').slice(0, 4);
+    if (digits && Number(digits[0]) > 2 && digits.length <= 3) {
+      digits = `0${digits}`;
+    }
+    if (digits.length < 2) return { digits, display: digits };
+    return {
+      digits,
+      display: `${digits.slice(0, 2)}:${digits.slice(2)}`,
+    };
   }
 
   function wishAbsolute(wishMin, nowMin) {
@@ -695,7 +709,7 @@
       !line ||
       !path ||
       !els.timeConnection ||
-      !els.actualLabel
+      !els.actualControl
     ) {
       if (line) line.hidden = true;
       return;
@@ -703,30 +717,27 @@
 
     const containerRect = els.timeConnection.getBoundingClientRect();
     const thumbRect = thumb.getBoundingClientRect();
-    const labelRect = els.actualLabel.getBoundingClientRect();
+    const actualRect = els.actualControl.getBoundingClientRect();
     if (containerRect.width <= 0 || containerRect.height <= 0) {
       line.hidden = true;
       return;
     }
 
     const startX = thumbRect.left + thumbRect.width / 2 - containerRect.left;
-    const startY = thumbRect.bottom + 4 - containerRect.top;
-    const endX = labelRect.left + labelRect.width / 2 - containerRect.left;
-    const endY = labelRect.top - 5 - containerRect.top;
-    const verticalDistance = endY - startY;
+    const startY = thumbRect.top - 4 - containerRect.top;
+    const endX = actualRect.left + actualRect.width / 2 - containerRect.left;
+    const endY = actualRect.bottom + 5 - containerRect.top;
+    const verticalDistance = startY - endY;
     if (verticalDistance <= 0) {
       line.hidden = true;
       return;
     }
 
-    const horizontalDistance = Math.abs(endX - startX);
-    const distanceProgress = Math.min(1, horizontalDistance / 330);
-    const handleProgress = 1 - (1 - distanceProgress) ** 2.5;
-    const handle = verticalDistance * 1.4 * handleProgress;
+    const handle = Math.min(64, Math.max(18, verticalDistance * 0.45));
     const d = [
       `M ${startX.toFixed(1)} ${startY.toFixed(1)}`,
-      `C ${startX.toFixed(1)} ${(startY + handle).toFixed(1)}`,
-      `${endX.toFixed(1)} ${(endY - handle).toFixed(1)}`,
+      `C ${startX.toFixed(1)} ${(startY - handle).toFixed(1)}`,
+      `${endX.toFixed(1)} ${(endY + handle).toFixed(1)}`,
       `${endX.toFixed(1)} ${endY.toFixed(1)}`,
     ].join(' ');
 
@@ -737,7 +748,7 @@
     path.setAttribute('d', d);
     if (els.timeConnectionHitArea) {
       els.timeConnectionHitArea.setAttribute('x', '0');
-      els.timeConnectionHitArea.setAttribute('y', startY.toFixed(1));
+      els.timeConnectionHitArea.setAttribute('y', endY.toFixed(1));
       els.timeConnectionHitArea.setAttribute('width', containerRect.width.toFixed(1));
       els.timeConnectionHitArea.setAttribute('height', verticalDistance.toFixed(1));
     }
@@ -973,7 +984,11 @@
           (programOrderById.get(a) ?? Number.MAX_SAFE_INTEGER) -
           (programOrderById.get(b) ?? Number.MAX_SAFE_INTEGER)
       )
-      .map((id) => ({ id, name: programName(programsById[id]) }));
+      .map((id) => ({
+        id,
+        name: programName(programsById[id]),
+        color: programColor(programsById[id]) || 'var(--muted)',
+      }));
   }
 
   function sharedListEl() {
@@ -991,7 +1006,7 @@
     list.innerHTML = programs
       .map(
         (p) =>
-          `<div class="overview-shared-list-item${p.id === state.selectedProgramId ? ' is-current' : ''}" data-program-id="${p.id}">${p.name}</div>`
+          `<div class="overview-shared-list-item${p.id === state.selectedProgramId ? ' is-current' : ''}" data-program-id="${p.id}" style="--program-color: ${p.color}"><span class="overview-shared-list-dot" aria-hidden="true"></span><span>${p.name}</span></div>`
       )
       .join('');
     list.classList.add('is-visible');
@@ -1173,13 +1188,14 @@
         ? overviewScrubNowMin
         : nowMinutes();
     const wishAbs = wishAbsolute(state.wishMinutes, nowMin);
-    els.actualLabel.textContent = formatActualDiff(
+    els.actualLabelText.textContent = formatActualDiff(
       signedDiffMinutes(sol.actualAbs, wishAbs)
     );
 
     const wishOnNextDay = state.wishMinutes <= nowMin;
-    const actualOnNextDay = sol.actualAbs >= MINUTES_PER_DAY;
-    els.wishDayHint.textContent = wishOnNextDay || actualOnNextDay ? I18N.t('day.tomorrowHint') : '';
+    els.wishDayHint.textContent = ` · ${I18N.t('day.tomorrowHint')}`;
+    els.wishDayHint.classList.toggle('is-visible', wishOnNextDay);
+    els.wishDayHint.setAttribute('aria-hidden', wishOnNextDay ? 'false' : 'true');
 
     updateHero(sol.presses, { animateDir });
 
@@ -1417,10 +1433,22 @@
     els.wishInput.select();
   });
 
-  els.wishInput.addEventListener('input', () => {
-    const digits = els.wishInput.value.replace(/\D/g, '').slice(0, 4);
-    els.wishInput.value = digits;
-    if (digits.length === 4) commitWishFromInput(digits);
+  els.wishInput.addEventListener('input', (e) => {
+    const raw = els.wishInput.value;
+    let digits = raw.replace(/\D/g, '').slice(0, 4);
+    if (
+      e.inputType === 'deleteContentBackward' &&
+      !raw.includes(':') &&
+      raw.length === 2
+    ) {
+      digits = digits.slice(0, -1);
+    }
+    const draft = formatWishDraft(digits);
+    els.wishInput.value = draft.display;
+    els.wishInput.setSelectionRange(draft.display.length, draft.display.length);
+    if (draft.digits.length === 4 && commitWishFromInput(draft.digits)) {
+      els.wishInput.blur();
+    }
   });
 
   els.wishInput.addEventListener('blur', () => {
@@ -1470,4 +1498,5 @@
   els.wishInput.value = formatClock(state.wishMinutes);
   renderPrograms();
   recompute({ preserveDelay: false });
+  updateTimeConnection();
 })();

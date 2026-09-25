@@ -15,49 +15,49 @@ window.MACHINE_CONFIG = {
   programs: [
     {
       id: 'p1',
-      names: { de: 'Eco', en: 'Eco', es: 'Eco', fr: 'Eco', nl: 'Eco' },
+      names: { de: 'Eco', en: 'Eco', es: 'Eco', fr: 'Eco', nl: 'Eco', uk: 'Еко' },
       buttonLabel: '1',
       durationMin: 220,
       includedInAutomaticSelection: true,
     }, // 3:40 · 50°C
     {
       id: 'p2',
-      names: { de: 'Sensor', en: 'Sensor', es: 'Sensor', fr: 'Sensor', nl: 'Sensor' },
+      names: { de: 'Sensor', en: 'Sensor', es: 'Sensor', fr: 'Sensor', nl: 'Sensor', uk: 'Сенсорна' },
       buttonLabel: '2',
       durationMin: 180,
       includedInAutomaticSelection: true,
     }, // 1:25–3:00 · planning duration: 3:00
     {
       id: 'p3',
-      names: { de: 'Intensiv', en: 'Intensive', es: 'Intensivo', fr: 'Intensif', nl: 'Intensief' },
+      names: { de: 'Intensiv', en: 'Intensive', es: 'Intensivo', fr: 'Intensif', nl: 'Intensief', uk: 'Інтенсивна' },
       buttonLabel: '3',
       durationMin: 170,
       includedInAutomaticSelection: true,
     }, // 2:50 · 65°C
     {
       id: 'p4',
-      names: { de: 'Täglich', en: 'Daily', es: 'Diario', fr: 'Quotidien', nl: 'Dagelijks' },
+      names: { de: 'Täglich', en: 'Daily', es: 'Diario', fr: 'Quotidien', nl: 'Dagelijks', uk: 'Щоденна' },
       buttonLabel: '4',
       durationMin: 90,
       includedInAutomaticSelection: true,
     }, // 1:30 · 50°C
     {
       id: 'p5',
-      names: { de: 'Nacht', en: 'Night', es: 'Nocturno', fr: 'Nuit', nl: 'Nacht' },
+      names: { de: 'Nacht', en: 'Night', es: 'Nocturno', fr: 'Nuit', nl: 'Nacht', uk: 'Нічна' },
       buttonLabel: '5',
       durationMin: 210,
       includedInAutomaticSelection: true,
     }, // 3:30 · 50°C
     {
       id: 'p6',
-      names: { de: 'Rapid', en: 'Rapid', es: 'Rápido', fr: 'Rapide', nl: 'Snel' },
+      names: { de: 'Rapid', en: 'Rapid', es: 'Rápido', fr: 'Rapide', nl: 'Snel', uk: 'Швидка' },
       buttonLabel: '6',
       durationMin: 30,
       includedInAutomaticSelection: false,
     }, // 0:30 · 50°C
     {
       id: 'p7',
-      names: { de: 'Glas', en: 'Glass', es: 'Cristal', fr: 'Verre', nl: 'Glas' },
+      names: { de: 'Glas', en: 'Glass', es: 'Cristal', fr: 'Verre', nl: 'Glas', uk: 'Скло' },
       buttonLabel: '7',
       durationMin: 100,
       includedInAutomaticSelection: false,

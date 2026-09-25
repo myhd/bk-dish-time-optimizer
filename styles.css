@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("assets/fonts/ibm-plex-sans/IBMPlexSans-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("assets/fonts/ibm-plex-sans/IBMPlexSans-SemiBold.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
 :root,
 [data-theme="light"] {
   --canvas: #ffffff;
@@ -190,24 +206,24 @@ body {
 }
 
 .prog-wrap {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
 .prog {
   position: relative;
+  height: 56px;
   border: 2px solid var(--line);
   border-radius: 10px;
-  padding: 10px 8px 8px;
+  padding: 7px 6px 5px;
   background: var(--canvas);
   color: inherit;
-  width: calc(25% - 6px);
-  min-width: 72px;
-  flex: 0 0 calc(25% - 6px);
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 3px;
   text-align: left;
   cursor: pointer;
   font: inherit;
@@ -221,6 +237,7 @@ body {
 }
 
 .prog-name {
+  font-size: 15px;
   text-decoration-line: underline;
   text-decoration-color: var(--program-color);
   text-decoration-thickness: 2px;
@@ -304,7 +321,8 @@ body {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  margin-top: 2px;
   isolation: isolate;
 }
 
@@ -348,8 +366,7 @@ body {
 
 .time-connection>.overview {
   position: relative;
-  /* Keep this above .time-block so the later DOM sibling does not cover the
-     downward-overflowing .overview-shared-list in the same stacking context. */
+  /* Keep the timeline and its downward-overflowing program list above nearby content. */
   z-index: 2;
 }
 
@@ -591,6 +608,9 @@ body {
 }
 
 .overview-shared-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 9px 14px;
   border-radius: 8px;
   font-size: 17px;
@@ -599,6 +619,14 @@ body {
   white-space: nowrap;
   text-align: left;
   cursor: pointer;
+}
+
+.overview-shared-list-dot {
+  width: var(--overview-dot-size);
+  height: var(--overview-dot-size);
+  flex: 0 0 var(--overview-dot-size);
+  border-radius: 50%;
+  background: var(--program-color, var(--muted));
 }
 
 .overview-shared-list-item.is-current {
@@ -623,10 +651,45 @@ body {
 
 .time-pair {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   column-gap: 16px;
   row-gap: 8px;
   align-items: center;
+}
+
+.time-pair > * {
+  min-width: 0;
+}
+
+.actual-label {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.target-label {
+  position: relative;
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.day-hint {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 180ms ease,
+    visibility 0s linear 180ms;
+}
+
+.day-hint.is-visible {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .day-hint {
+    transition: none;
+  }
 }
 
 .wish-field {
@@ -674,6 +737,20 @@ body {
   background: var(--ink);
   opacity: 0.08;
   pointer-events: none;
+}
+
+.split-step::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.time-connection.is-scrubbing .split-step::after {
+  opacity: 0.07;
 }
 
 .split-hit {
@@ -790,7 +867,7 @@ body {
 }
 
 .hero-row {
-  --hero-h: 132px;
+  --hero-h: 80px;
   display: flex;
   align-items: flex-start;
   gap: 10px;
