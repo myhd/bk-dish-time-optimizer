@@ -15,7 +15,15 @@ DishTime turns a desired finish time into the right delayed-start setting for a 
 - Finds the closest available finish time for the selected program.
 - Shows the delay setting and number of button presses.
 - Makes alternative programs and finish times easy to compare.
-- Supports Deutsch, English, Español, Français, and Nederlands.
+- Supports Deutsch, English, Español, Français, Nederlands, and Українська.
+
+## See it in action
+
+<p align="center">
+  <img src="assets/readme/dishtime-demo.gif" width="440" alt="Animated DishTime demo showing target-time entry, finish-time scrubbing, program comparison, and the resulting dishwasher settings">
+</p>
+
+<p align="center"><sub>Enter a target time, compare the available options, and use the calculated program and delay.</sub></p>
 
 ## Where it runs
 
